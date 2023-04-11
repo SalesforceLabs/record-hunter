@@ -10,7 +10,7 @@ Thank you for your interest in contributing to this project! Here are some guide
 - Submit a pull request
 
 ## Code of Conduct
-Please note that this project adheres to the Contributor Covenant code of conduct. By participating, you are expected to uphold this code. Please report any unacceptable behavior to the project maintainers.
+Please note that this project adheres to the Contributor Covenant [code of conduct](https://github.com/SalesforceLabs/record-hunter/blob/main/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report any unacceptable behavior to the project maintainers.
 
 ## Issues and Pull Requests
 - Before starting to work on an issue, please check if it has already been reported
