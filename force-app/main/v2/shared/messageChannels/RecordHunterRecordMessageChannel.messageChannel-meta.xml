@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>Record Hunter Record Message Channel</masterLabel>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <fieldName>recordIds</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>sourceComponentId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>rootComponentId</fieldName>
+    </lightningMessageFields>
+</LightningMessageChannel>

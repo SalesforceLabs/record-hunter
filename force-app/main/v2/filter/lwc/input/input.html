@@ -1,0 +1,72 @@
+<template>
+  <template if:true={isText}>
+    <lightning-input type="text" label={label} data-name="text-input" value={defaultValue.value}></lightning-input>
+  </template>
+  <template if:true={isNumberRange}>
+    <div class="slds-form-element">
+      <label class="slds-form-element__label">{label}</label>
+      <div class="slds-form-element__control slds-grid slds-gutters slds-gutters_xxx-small">
+        <lightning-input data-name="minimum-number-input" type="number" label={label} variant="label-hidden"
+          class="slds-col" step={step} value={defaultValue.minValue}></lightning-input>
+        <lightning-icon icon-name="utility:dash" alternative-text="through" title="through" size="x-small"
+          class="slds-col slds-m-top_x-small slds-grow-none"></lightning-icon>
+        <lightning-input data-name="maximum-number-input" type="number" label={label} variant="label-hidden"
+          class="slds-col" step={step} value={defaultValue.maxValue}></lightning-input>
+      </div>
+    </div>
+  </template>
+  <template if:true={isCheckbox}>
+    <div class="slds-form-element">
+      <label class="slds-form-element__label">{label} </label>
+      <div class="slds-form-element__control">
+        <lightning-input data-name="checkbox-input" type="checkbox" class="checkbox-input slds-m-top_xx-small"
+          checked={defaultValue.value}>
+        </lightning-input>
+      </div>
+    </div>
+  </template>
+  <template if:true={isSelection}>
+    <c-multi-select-combobox data-name="multi-select-combobox" label={label} options={options}
+      values={defaultValue.value}>
+    </c-multi-select-combobox>
+  </template>
+  <template if:true={isDateRange}>
+    <div class="slds-form-element">
+      <label class="slds-form-element__label">{label}</label>
+      <div class="slds-form-element__control slds-grid slds-gutters slds-gutters_xxx-small">
+        <lightning-input data-name="minimum-date-input" type="date" label={label} variant="label-hidden"
+          class="slds-col" value={defaultValue.minValue}></lightning-input>
+        <lightning-icon icon-name="utility:dash" alternative-text="through" title="through" size="x-small"
+          class="slds-col slds-m-top_x-small slds-grow-none"></lightning-icon>
+        <lightning-input data-name="maximum-date-input" type="date" label={label} variant="label-hidden"
+          class="slds-col" value={defaultValue.maxValue}></lightning-input>
+      </div>
+    </div>
+  </template>
+  <template if:true={isDatetimeRange}>
+    <div class="slds-form-element">
+      <label class="slds-form-element__label">{label}</label>
+      <div class="slds-form-element__control slds-grid slds-gutters slds-gutters_xxx-small">
+        <lightning-input data-name="minimum-datetime-input" type="datetime" label={label} variant="label-hidden"
+          class="slds-col" value={defaultValue.minValue}></lightning-input>
+        <lightning-icon icon-name="utility:dash" alternative-text="through" title="through" size="xx-small"
+          class="slds-col slds-m-top_x-small slds-grow-none"></lightning-icon>
+        <lightning-input data-name="maximum-datetime-input" type="datetime" label={label} variant="label-hidden"
+          class="slds-col" value={defaultValue.maxValue}></lightning-input>
+      </div>
+    </div>
+  </template>
+  <template if:true={isTimeRange}>
+    <div class="slds-form-element">
+      <label class="slds-form-element__label">{label}</label>
+      <div class="slds-form-element__control slds-grid slds-gutters slds-gutters_xxx-small">
+        <lightning-input data-name="minimum-time-input" type="time" label={label} variant="label-hidden"
+          class="slds-col" value={defaultValue.minValue}></lightning-input>
+        <lightning-icon icon-name="utility:dash" alternative-text="through" title="through" size="x-small"
+          class="slds-col slds-m-top_x-small slds-grow-none"></lightning-icon>
+        <lightning-input data-name="maximum-time-input" type="time" label={label} variant="label-hidden"
+          class="slds-col" value={defaultValue.maxValue}></lightning-input>
+      </div>
+    </div>
+  </template>
+</template>

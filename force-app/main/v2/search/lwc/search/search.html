@@ -1,0 +1,8 @@
+<template>
+  <lightning-input label="hidden" name="searchInput" type="search" value={defaultKeyword} variant="label-hidden">
+  </lightning-input>
+  <template if:true={showSpinner}>
+    <lightning-spinner alternative-text="Loading...">
+    </lightning-spinner>
+  </template>
+</template>

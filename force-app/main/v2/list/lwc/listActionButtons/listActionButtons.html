@@ -1,0 +1,17 @@
+<template>
+  <lightning-button-group>
+    <template for:each={buttons} for:item="button">
+      <lightning-button key={button.name} label={button.label} data-name={button.name} data-type={button.type}
+        data-label={button.label} onclick={onActionClicked} disabled={disabled}></lightning-button>
+    </template>
+    <template if:true={hasMenuItems}>
+      <lightning-button-menu variant="border-filled" menu-alignment="right">
+        <template for:each={menuItems} for:item="item">
+          <lightning-menu-item key={item.name} label={item.label} value={item.name} data-name={item.name}
+            data-label={item.label} data-type={item.type} onclick={onActionClicked} disabled={disabled}>
+          </lightning-menu-item>
+        </template>
+      </lightning-button-menu>
+    </template>
+  </lightning-button-group>
+</template>

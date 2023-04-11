@@ -1,0 +1,36 @@
+<template>
+  <div class="slds-form-element">
+    <label class="slds-form-element__label">{label}</label>
+    <div class="slds-form-element__control">
+      <div class="slds-combobox_container">
+        <div class={comboboxClass}>
+          <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
+            <!--<input type="text" class="slds-input slds-combobox__input" autocomplete="off" role="textbox" readonly="" value={value} />-->
+            <button type="button" class={buttonClass} aria-expanded={showDialog} aria-haspopup="listbox"
+              onclick={onComboboxClicked}>
+              <span class="slds-truncate">{value}</span>
+            </button>
+            <span class="slds-icon_container slds-icon-utility-down slds-input__icon slds-input__icon_right">
+              <lightning-icon icon-name="utility:down" size="x-small"></lightning-icon>
+            </span>
+          </div>
+          <template if:true={showDialog}>
+            <section aria-label="Language Options" class={dialogClass} role="dialog" onclick={onDialogClicked}
+              style="position: absolute; top: 32px">
+              <div class="slds-popover__body slds-popover__body_small">
+                <lightning-dual-listbox label={label} source-label={sourceLabel} selected-label={selectedLabel}
+                  options={options} value={values} onchange={onSelectedOptionsChanged} variant="label-hidden" size="5"
+                  disable-reordering="true"></lightning-dual-listbox>
+              </div>
+              <footer class="slds-popover__footer slds-popover__footer_form">
+                <lightning-button variant="Neutral" label="Cancel" onclick={onCancelClicked}></lightning-button>
+                <lightning-button variant="brand" label="Done" onclick={onDoneClicked} class="slds-m-left_x-small">
+                </lightning-button>
+              </footer>
+            </section>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

@@ -1,0 +1,11 @@
+<template>
+    <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_medium" role="alert">
+        <lightning-icon icon-name="utility:warning" alternative-text="warning" title="warning" size="x-small"
+            class="slds-m-right_x-small"></lightning-icon>
+        <h2>{message}</h2>
+        <div class="slds-notify__close">
+            <lightning-button-icon icon-name="utility:close" variant="bare" alternative-text="close" title="close"
+                size="small" onclick={onCloseClicked}></lightning-button-icon>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,23 @@
+<template>
+    <template if:false={hasConfigurationError}>
+        <lightning-card icon-name={cardIconName}>
+            <h3 slot="title">{cardTitle} <span>({totalNumberOfRecords})</span></h3>
+            <template if:true={hasActions}>
+                <c-list-action-buttons slot="actions" actions={actions} onclick={onActionButtonClicked}
+                    disabled={isActionDisabled}>
+                </c-list-action-buttons>
+            </template>
+            <template if:true={hasRuntimeError}>
+                <c-alert message={errorMessage} onclose={onAlertClosed}></c-alert>
+            </template>
+            <c-list object-api-name={targetObjectApiName} component-id={componentId}
+                source-component-ids={sourceComponentIds} field-api-names={fieldNames} table-height={tableHeight}
+                page-size={pageSize} hide-checkbox-column={hideCheckboxColumn} onrowselected={onRowSelected}
+                onload={onRecordLoaded}>
+            </c-list>
+        </lightning-card>
+    </template>
+    <template if:true={hasConfigurationError}>
+        <c-error-card title={errorTitle} message={errorMessage}></c-error-card>
+    </template>
+</template>
