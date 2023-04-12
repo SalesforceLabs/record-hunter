@@ -1,9 +1,12 @@
-import {api, LightningElement} from "lwc";
-import {NavigationMixin} from "lightning/navigation";
-export default class FormattedRecordName extends NavigationMixin(LightningElement) {
+import { api, LightningElement } from "lwc";
+import { NavigationMixin } from "lightning/navigation";
+export default class FormattedRecordName extends NavigationMixin(
+  LightningElement
+) {
   @api label;
   @api recordId;
-  onLinkClicked() {
+  onLinkClicked(e) {
+    e.preventDefault();
     this[NavigationMixin.Navigate]({
       type: "standard__recordPage",
       attributes: {
