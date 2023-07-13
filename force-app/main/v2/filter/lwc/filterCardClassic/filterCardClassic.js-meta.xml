@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
-    <apiVersion>58.0</apiVersion>
-    <isExposed>true</isExposed>
-    <masterLabel>RHG - Filter</masterLabel>
-    <targets>
-        <target>lightning__AppPage</target>
-        <target>lightning__HomePage</target>
-        <target>lightning__RecordPage</target>
-        <target>lightningCommunity__Default</target>
-        <target>lightningCommunity__Page</target>
-    </targets>
-    <targetConfigs>
-        <targetConfig
-      targets="lightning__AppPage, lightning__HomePage,lightning__RecordPage,lightningCommunity__Default"
+  <apiVersion>58.0</apiVersion>
+  <isExposed>true</isExposed>
+  <masterLabel>RHG - Filter</masterLabel>
+  <targets>
+    <target>lightning__AppPage</target>
+    <target>lightning__HomePage</target>
+    <target>lightning__RecordPage</target>
+    <target>lightningCommunity__Default</target>
+    <target>lightningCommunity__Page</target>
+  </targets>
+  <targetConfigs>
+    <targetConfig
+      targets="lightning__AppPage, lightning__HomePage,lightning__RecordPage"
     >
-            <property
+      <property
         type="String"
         name="cardTitle"
         label="Title"
         default="Filter"
         required="true"
       />
-            <property
+      <property
         type="String"
         name="targetObjectApiName"
         label="Target Object"
         default="Opportunity"
         required="true"
       />
-            <property
+      <property
         type="String"
         name="targetFieldApiNames"
         label="Field Names"
         default="Name, StageName, Amount, CloseDate, AccountId.Name, OwnerId:User.Name"
       />
-            <property
+      <property
         type="String"
         name="cardVariant"
         label="Card Variant"
@@ -42,32 +42,32 @@
         default="Default"
         required="true"
       />
-            <property
+      <property
         type="String"
         name="numberOfColumns"
         label="Number of Columns"
         datasource="1,2,3,4,6"
         default="2"
       />
-            <property
+      <property
         type="Boolean"
         name="showObjectNames"
         label="Show Object Names"
         default="false"
       />
-            <property
+      <property
         type="Boolean"
         name="showFieldIndex"
         label="Show Field Indexes"
         default="false"
       />
-            <property
+      <property
         type="String"
         name="defaultValuesOrFields"
         label="Default Values or Field Names"
       />
-            <property type="String" name="customLogic" label="Custom Logic" />
-            <property
+      <property type="String" name="customLogic" label="Custom Logic" />
+      <property
         type="String"
         name="order"
         label="Order"
@@ -75,6 +75,73 @@
         default="2"
         required="true"
       />
-        </targetConfig>
-    </targetConfigs>
+      <supportedFormFactors>
+        <supportedFormFactor type="Small" />
+        <supportedFormFactor type="Large" />
+      </supportedFormFactors>
+    </targetConfig>
+    <targetConfig targets="lightningCommunity__Default">
+      <property
+        type="String"
+        name="cardTitle"
+        label="Title"
+        default="Filter"
+        required="true"
+      />
+      <property
+        type="String"
+        name="targetObjectApiName"
+        label="Target Object"
+        default="Opportunity"
+        required="true"
+      />
+      <property
+        type="String"
+        name="targetFieldApiNames"
+        label="Field Names"
+        default="Name, StageName, Amount, CloseDate, AccountId.Name, OwnerId:User.Name"
+      />
+      <property
+        type="String"
+        name="cardVariant"
+        label="Card Variant"
+        datasource="Open,Close,Default"
+        default="Default"
+        required="true"
+      />
+      <property
+        type="String"
+        name="numberOfColumns"
+        label="Number of Columns"
+        datasource="1,2,3,4,6"
+        default="2"
+      />
+      <property
+        type="Boolean"
+        name="showObjectNames"
+        label="Show Object Names"
+        default="false"
+      />
+      <property
+        type="Boolean"
+        name="showFieldIndex"
+        label="Show Field Indexes"
+        default="false"
+      />
+      <property
+        type="String"
+        name="defaultValuesOrFields"
+        label="Default Values or Field Names"
+      />
+      <property type="String" name="customLogic" label="Custom Logic" />
+      <property
+        type="String"
+        name="order"
+        label="Order"
+        datasource="1,2,3,4,5,6,7,8,9,10"
+        default="2"
+        required="true"
+      />
+    </targetConfig>
+  </targetConfigs>
 </LightningComponentBundle>
