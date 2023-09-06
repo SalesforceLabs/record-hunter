@@ -9,10 +9,16 @@
         }));
     },
     onGoogleMap : function(c, h) {
-        h.setDefaultValues(c, h);
+        c.set('v.isGoogleMapLoaded', true);
+        if (c.get('v.isDefaultValueLoaded')) {
+            h.setDefaultValues(c, h);
+        }
     },
     onDefaultValuesLoaded : function(c, h) {
-        h.setDefaultValues(c, h);
+        c.set('v.isDefaultValueLoaded', true);
+        if (c.get('v.isGoogleMapLoaded')) {
+            h.setDefaultValues(c, h);
+        }
     },
     onGeocodeResult : function(c, h, latlng) {
         c.set('v.center', latlng);
