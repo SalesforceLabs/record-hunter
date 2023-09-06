@@ -23,6 +23,8 @@
     <aura:attribute access="public" type="Object"   name="center"   />
     <aura:attribute access="public" type="Object[]" name="markers"  />
     <aura:attribute access="public" type="Object[]" name="circles"  />
+    <aura:attribute access="public" type="Boolean" name="isGoogleMapLoaded" />
+    <aura:attribute access="public" type="Boolean" name="isDefaultValueLoaded" />
 
     <!-- Private Attributes -->
     <aura:attribute access="private" type="String[]" name="recordIds"/>

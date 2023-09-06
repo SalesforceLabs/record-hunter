@@ -55,6 +55,7 @@
         p_getDefaultValues
         .then($A.getCallback(function(defaultValues) {
             c.set('v.defaultValues', defaultValues);
+            h.onDefaultValuesLoaded(c, h);
         }))
         .catch($A.getCallback(function(reason) {
             h.showError(c, h, 'controller.onInit: ' + reason);
