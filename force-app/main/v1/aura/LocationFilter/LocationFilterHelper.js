@@ -9,21 +9,10 @@
         }));
     },
     onGoogleMap : function(c, h) {
-        const defaultValues = c.get('v.defaultValues');
-        if (defaultValues) {
-            const numValues = defaultValues.length;
-            const radiusFactor = numValues > 1 ? +defaultValues[numValues - 1] : null;
-            const mode = c.get('v.mode');
-            if (mode === 'DISTANCE') c.set('v.distance', radiusFactor);
-            if (mode === 'TRANSPORTATION') c.set('v.time', radiusFactor);
-
-            const location = numValues === 1 ? defaultValues[0] : defaultValues.splice(0, numValues - 1).join(',');
-            c.set('v.location', location);
-
-            if (location) {
-                c.get('v.port').postMessage(JSON.stringify({type: 'GEOCODE', location: location}));
-            }
-        }
+        h.setDefaultValues(c, h);
+    },
+    onDefaultValuesLoaded : function(c, h) {
+        h.setDefaultValues(c, h);
     },
     onGeocodeResult : function(c, h, latlng) {
         c.set('v.center', latlng);
@@ -45,6 +34,23 @@
             }]);
         } else {
             c.set('v.circles', []);
+        }
+    },
+    setDefaultValues : function(c, h) {
+        const defaultValues = c.get('v.defaultValues');
+        if (defaultValues) {
+            const numValues = defaultValues.length;
+            const radiusFactor = numValues > 1 ? +defaultValues[numValues - 1] : null;
+            const mode = c.get('v.mode');
+            if (mode === 'DISTANCE') c.set('v.distance', radiusFactor);
+            if (mode === 'TRANSPORTATION') c.set('v.time', radiusFactor);
+
+            const location = numValues === 1 ? defaultValues[0] : defaultValues.splice(0, numValues - 1).join(',');
+            c.set('v.location', location);
+
+            if (location) {
+                c.get('v.port').postMessage(JSON.stringify({type: 'GEOCODE', location: location}));
+            }
         }
     },
     loadRecords : function(c, h) {
