@@ -1,6 +1,9 @@
 # Contributing Guidelines
 Thank you for your interest in contributing to this project! Here are some guidelines to help you get started.
 
+## Disclaimer
+- Changes made to this repository do not guarantee immediate publication on AppExchange.
+
 ## Getting Started
 - Fork the repository
 - Clone your forked repository to your local machine
