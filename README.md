@@ -34,8 +34,15 @@ Contributions are always welcome! Please read the [contribution guidelines](http
 
 Distributed under the BSD3 Clause License. See [LICENSE](https://github.com/SalesforceLabs/record-hunter/blob/main/LICENSE) for more information.
 
+## Disclaimer
+
+This software is provided "as is" and without warranty of any kind. 
+The authors and contributors disclaim any liability for damages resulting from the use or misuse of this software. 
+Users are solely responsible for assessing its suitability for their specific needs and assume all risks associated with its use.
+
+
 ## Contact
 
-Please raise an issue on this project and DO NOT CONTACT SALESFORCE SUPPORT CHANNELS.
+Please raise an issue on this project and DO NOT contact Salesforce support channels.
 
 Project Link: https://github.com/SalesforceLabs/record-hunter
