@@ -1,11 +1,10 @@
-import {LightningElement, api, wire} from "lwc";
-
+import { LightningElement, api, wire } from "lwc";
+import getObjectApiNameById from "@salesforce/apex/SchemaDataService.getObjectApiNameById";
 import getFieldInfos from "@salesforce/apex/SchemaDataService.getFieldInfos";
 
 export default class FilterCardClassic extends LightningElement {
   // Reserved Public Properties
   @api recordId;
-  @api objectApiName;
 
   // Public Properties
   @api cardTitle = "Filter";
@@ -23,6 +22,7 @@ export default class FilterCardClassic extends LightningElement {
   @api cardVariant;
 
   // Private Properties
+  objectApiName;
   componentId;
   sourceComponentIds;
   config;
@@ -45,8 +45,23 @@ export default class FilterCardClassic extends LightningElement {
     return classList.join(" ");
   }
 
-  @wire(getFieldInfos, {objectApiName: "$objectApiName", fieldApiNames: "$defaultValuesOrFields", skipError: true})
-  getContextRecordFieldInfosCallback({data, error}) {
+  @wire(getObjectApiNameById, { recordId: "$recordId" })
+  getObjectApiNameByIdCallback({ data, error }) {
+    if (data && !data.hasError) {
+      this.objectApiName = data.body;
+    } else if (data && data.hasError) {
+      this.showConfigurationError(data.errorMessage);
+    } else if (error) {
+      this.showConfigurationError(error);
+    }
+  }
+
+  @wire(getFieldInfos, {
+    objectApiName: "$objectApiName",
+    fieldApiNames: "$defaultValuesOrFields",
+    skipError: true
+  })
+  getContextRecordFieldInfosCallback({ data, error }) {
     if (data && !data.hasError) {
       this.contextRecordFieldInfos = data.body;
       if (this.filterFieldInfos) {
@@ -65,7 +80,7 @@ export default class FilterCardClassic extends LightningElement {
     fieldApiNames: "$targetFieldApiNames",
     skipError: false
   })
-  getFilterFieldInfosCallback({error, data}) {
+  getFilterFieldInfosCallback({ error, data }) {
     if (data && !data.hasError) {
       this.filterFieldInfos = data.body;
       if ((this.recordId && this.contextRecordFieldInfos) || !this.recordId) {
@@ -81,7 +96,8 @@ export default class FilterCardClassic extends LightningElement {
 
   connectedCallback() {
     this.componentId = this.order;
-    this.sourceComponentIds = parseInt(this.order) - 1 > 0 ? parseInt(this.order) - 1 + "" : "";
+    this.sourceComponentIds =
+      parseInt(this.order, 10) - 1 > 0 ? parseInt(this.order, 10) - 1 + "" : "";
 
     const numOfCols = parseInt(this.numberOfColumns, 10);
     this.columnSize = 0 < numOfCols && numOfCols <= 12 ? 12 / numOfCols : 6;
@@ -161,7 +177,10 @@ export default class FilterCardClassic extends LightningElement {
     const defaultValueOrFieldList = defaultValuesOrFields.split(",");
     if (contextRecordFieldInfos) {
       for (let contextRecordFieldInfo of contextRecordFieldInfos) {
-        defaultValueOrFieldList[contextRecordFieldInfo.index] = {source: "context", fieldName: contextRecordFieldInfo.name};
+        defaultValueOrFieldList[contextRecordFieldInfo.index] = {
+          source: "context",
+          fieldName: contextRecordFieldInfo.name
+        };
       }
     }
 
@@ -170,7 +189,17 @@ export default class FilterCardClassic extends LightningElement {
     if (filterFieldInfos) {
       for (let i = 0, j = 0; i < filterFieldInfos.length; i++, j++) {
         const defaultValue = {};
-        if (["INTEGER", "PERCENT", "CURRENCY", "DOUBLE", "DATETIME", "DATE", "TIME"].includes(filterFieldInfos[i].type)) {
+        if (
+          [
+            "INTEGER",
+            "PERCENT",
+            "CURRENCY",
+            "DOUBLE",
+            "DATETIME",
+            "DATE",
+            "TIME"
+          ].includes(filterFieldInfos[i].type)
+        ) {
           if (j < defaultValueOrFieldList.length) {
             defaultValue.minValue = defaultValueOrFieldList[j];
             j++;

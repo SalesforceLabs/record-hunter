@@ -129,6 +129,12 @@
         default="false"
       />
       <property
+        name="recordId"
+        type="String"
+        label="Record ID"
+        default="{!recordId}"
+      />
+      <property
         type="String"
         name="defaultValuesOrFields"
         label="Default Values or Field Names"
