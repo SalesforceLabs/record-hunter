@@ -6,6 +6,7 @@ import getFieldInfo from "@salesforce/apex/SchemaDataService.getFieldInfo";
 export default class SearchCardClassic extends LightningElement {
   // Reserved Public Properties
   @api recordId;
+  @api objectApiName;
 
   // Public Properties
   @api cardTitle = "Search";
@@ -15,7 +16,6 @@ export default class SearchCardClassic extends LightningElement {
   @api order;
 
   // Private Properties
-  objectApiName;
   componentId;
   sourceComponentIds;
   hasConfigurationError;
@@ -35,6 +35,7 @@ export default class SearchCardClassic extends LightningElement {
   @wire(getObjectApiNameById, { recordId: "$recordId" })
   getObjectApiNameByIdCallback({ data, error }) {
     if (data && !data.hasError) {
+      // eslint-disable-next-line @lwc/lwc/no-api-reassignments
       this.objectApiName = data.body;
       console.log("this.objectApiName", this.objectApiName);
     } else if (data && data.hasError) {
