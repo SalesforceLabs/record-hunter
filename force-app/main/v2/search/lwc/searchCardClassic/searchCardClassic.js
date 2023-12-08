@@ -1,11 +1,11 @@
-import {LightningElement, api, wire} from "lwc";
+import { LightningElement, api, wire } from "lwc";
 import getObjectInfoByName from "@salesforce/apex/SchemaDataService.getObjectInfoByName";
+import getObjectApiNameById from "@salesforce/apex/SchemaDataService.getObjectApiNameById";
 import getFieldInfo from "@salesforce/apex/SchemaDataService.getFieldInfo";
 
 export default class SearchCardClassic extends LightningElement {
   // Reserved Public Properties
   @api recordId;
-  @api objectApiName;
 
   // Public Properties
   @api cardTitle = "Search";
@@ -15,6 +15,7 @@ export default class SearchCardClassic extends LightningElement {
   @api order;
 
   // Private Properties
+  objectApiName;
   componentId;
   sourceComponentIds;
   hasConfigurationError;
@@ -22,8 +23,8 @@ export default class SearchCardClassic extends LightningElement {
   defaultValue;
 
   // Wire Service Event Handlers
-  @wire(getObjectInfoByName, {objectApiName: "$targetObjectApiName"})
-  getObjectInfoByNameCallback({data, error}) {
+  @wire(getObjectInfoByName, { objectApiName: "$targetObjectApiName" })
+  getObjectInfoByNameCallback({ data, error }) {
     if (data && data.hasError) {
       this.showConfigurationError(data.errorMessage);
     } else if (error) {
@@ -31,8 +32,23 @@ export default class SearchCardClassic extends LightningElement {
     }
   }
 
-  @wire(getFieldInfo, {objectApiName: "$objectApiName", fieldApiName: "$defaultValuesOrFieldNames"})
-  getFieldInfoCallback({data, error}) {
+  @wire(getObjectApiNameById, { recordId: "$recordId" })
+  getObjectApiNameByIdCallback({ data, error }) {
+    if (data && !data.hasError) {
+      this.objectApiName = data.body;
+      console.log("this.objectApiName", this.objectApiName);
+    } else if (data && data.hasError) {
+      this.showConfigurationError(data.errorMessage);
+    } else if (error) {
+      this.showConfigurationError(error);
+    }
+  }
+
+  @wire(getFieldInfo, {
+    objectApiName: "$objectApiName",
+    fieldApiName: "$defaultValuesOrFieldNames"
+  })
+  getFieldInfoCallback({ data, error }) {
     if (data && !data.hasError) {
       this.defaultValue = {
         source: "context",
@@ -48,7 +64,8 @@ export default class SearchCardClassic extends LightningElement {
   // Lifecycle Event Handlers
   connectedCallback() {
     this.componentId = this.order;
-    this.sourceComponentIds = parseInt(this.order) - 1 > 0 ? parseInt(this.order) - 1 + "" : "";
+    this.sourceComponentIds =
+      parseInt(this.order, 10) - 1 > 0 ? parseInt(this.order, 10) - 1 + "" : "";
     if (!this.objectApiName) {
       this.defaultValue = this.defaultValuesOrFieldNames;
     }

@@ -62,6 +62,12 @@
         required="true"
       />
       <property
+        name="recordId"
+        type="String"
+        label="Record ID"
+        default="{!recordId}"
+      />
+      <property
         type="String"
         name="defaultValuesOrFieldNames"
         label="Default Values or Field Names"
