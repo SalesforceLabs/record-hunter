@@ -5,6 +5,7 @@ import getFieldInfos from "@salesforce/apex/SchemaDataService.getFieldInfos";
 export default class FilterCardClassic extends LightningElement {
   // Reserved Public Properties
   @api recordId;
+  @api objectApiName;
 
   // Public Properties
   @api cardTitle = "Filter";
@@ -22,7 +23,6 @@ export default class FilterCardClassic extends LightningElement {
   @api cardVariant;
 
   // Private Properties
-  objectApiName;
   componentId;
   sourceComponentIds;
   config;
@@ -48,6 +48,7 @@ export default class FilterCardClassic extends LightningElement {
   @wire(getObjectApiNameById, { recordId: "$recordId" })
   getObjectApiNameByIdCallback({ data, error }) {
     if (data && !data.hasError) {
+      // eslint-disable-next-line @lwc/lwc/no-api-reassignments
       this.objectApiName = data.body;
     } else if (data && data.hasError) {
       this.showConfigurationError(data.errorMessage);
