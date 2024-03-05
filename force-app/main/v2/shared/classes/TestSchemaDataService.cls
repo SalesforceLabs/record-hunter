@@ -15,10 +15,21 @@ public class TestSchemaDataService {
   static void getObjectApiNameById() {
     User u = [SELECT Id, LastName FROM User LIMIT 1][0];
     String userId = u.Id;
-
     DataService.Result result = SchemaDataService.getObjectApiNameById(userId);
     String objectApiName = (String) result.body;
     System.assertEquals('User', objectApiName);
+  }
+  @isTest
+  static void getObjectApiNameByIdWhenRecordIdIsNull() {
+    DataService.Result result = SchemaDataService.getObjectApiNameById(null);
+    String objectApiName = (String) result.body;
+    System.assertEquals('', objectApiName);
+  }
+  @isTest
+  static void getObjectApiNameByIdWhenRecordIdIsEmpty() {
+    DataService.Result result = SchemaDataService.getObjectApiNameById('');
+    String objectApiName = (String) result.body;
+    System.assertEquals('', objectApiName);
   }
 
   // TEST: Result getFieldInfo(String objectApiName, String fieldApiName)

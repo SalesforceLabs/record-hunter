@@ -37,7 +37,6 @@ export default class SearchCardClassic extends LightningElement {
     if (data && !data.hasError) {
       // eslint-disable-next-line @lwc/lwc/no-api-reassignments
       this.objectApiName = data.body;
-      console.log("this.objectApiName", this.objectApiName);
     } else if (data && data.hasError) {
       this.showConfigurationError(data.errorMessage);
     } else if (error) {

@@ -17,12 +17,16 @@ public with sharing class SchemaDataService extends DataService {
   @AuraEnabled(cacheable=true)
   public static Result getObjectApiNameById(String recordId) {
     try {
-      return new Result(
-        ((ID) recordId)
-          .getSObjectType()
-          .getDescribe(SObjectDescribeOptions.DEFERRED)
-          .getName()
-      );
+      if (String.isBlank(recordId)) {
+        return new Result('');
+      } else {
+        return new Result(
+          ((ID) recordId)
+            .getSObjectType()
+            .getDescribe(SObjectDescribeOptions.DEFERRED)
+            .getName()
+        );
+      }
     } catch (Exception e) {
       return new Result('', e.getMessage());
     }
