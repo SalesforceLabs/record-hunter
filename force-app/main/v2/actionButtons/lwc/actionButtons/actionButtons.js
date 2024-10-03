@@ -1,4 +1,4 @@
-import {api} from "lwc";
+import { api } from "lwc";
 import InteractiveLightningElement from "c/interactiveLightningElement";
 
 export default class ActionButtons extends InteractiveLightningElement {
@@ -7,6 +7,7 @@ export default class ActionButtons extends InteractiveLightningElement {
   @api targetComponentId = "0";
   @api alignment = "CENTER";
   @api searchButtonLabel = "Search";
+  @api isSearchOnLoadEnabled = false;
 
   get sldsBoxClass() {
     const classList = ["slds-box  slds-box_small slds-theme_default"];
@@ -33,6 +34,21 @@ export default class ActionButtons extends InteractiveLightningElement {
 
   connectedCallback() {
     this.enableInteraction(this.componentId);
+    if (this.isSearchOnLoadEnabled) {
+      this.subscribeInitMessage(() => {
+        this.publishTriggerMessage(this.targetComponentId);
+      });
+    }
+  }
+
+  disconnectedCallback() {
+    this.unsubscribeInitMessage();
+  }
+  renderedCallback() {
+    if (!this.isRendered) {
+      this.isRendered = true;
+      this.publishInitMessage();
+    }
   }
   onSearchClicked() {
     this.publishTriggerMessage(this.targetComponentId);

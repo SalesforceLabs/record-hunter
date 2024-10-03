@@ -30,6 +30,12 @@
         required="true"
       />
       <property
+        type="Boolean"
+        name="isSearchOnLoadEnabled"
+        label="Search on Load"
+        default="false"
+      />
+      <property
         type="String"
         name="targetComponentId"
         label="Target Component Order"
@@ -57,6 +63,12 @@
         datasource="LEFT, CENTER, RIGHT"
         default="CENTER"
         required="true"
+      />
+      <property
+        type="Boolean"
+        name="isSearchOnLoadEnabled"
+        label="Search on Load"
+        default="false"
       />
       <property
         type="String"
