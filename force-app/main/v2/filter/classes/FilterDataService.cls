@@ -18,6 +18,8 @@ public with sharing class FilterDataService extends DataService {
     public Integer index;
     @AuraEnabled
     public Boolean isFilterable;
+    @AuraEnabled
+    public Boolean isRelative;
   }
   public class SelectOption {
     @AuraEnabled
@@ -54,7 +56,10 @@ public with sharing class FilterDataService extends DataService {
   }
 
   @AuraEnabled(cacheable=true)
-  public static Result getInputInfos(String objectApiName, String fieldApiNames) {
+  public static Result getInputInfos(
+    String objectApiName,
+    String fieldApiNames
+  ) {
     if (String.isBlank(objectApiName)) {
       return new Result('', '');
     }
@@ -72,7 +77,13 @@ public with sharing class FilterDataService extends DataService {
   }
 
   @AuraEnabled(cacheable=false)
-  public static Result filterRecordIds(String objectApiName, String fieldApiNames, String formDataJson, String recordIds, String customLogic) {
+  public static Result filterRecordIds(
+    String objectApiName,
+    String fieldApiNames,
+    String formDataJson,
+    String recordIds,
+    String customLogic
+  ) {
     if (String.isBlank(objectApiName)) {
       return new Result('', '');
     }
@@ -80,10 +91,18 @@ public with sharing class FilterDataService extends DataService {
       return new Result('', '');
     }
 
-    String conditions = getConditions(objectApiName, fieldApiNames, formDataJson, customLogic);
+    String conditions = getConditions(
+      objectApiName,
+      fieldApiNames,
+      formDataJson,
+      customLogic
+    );
 
     String query = 'SELECT Id FROM ' + objectApiName;
-    query += ' WHERE Id IN (\'' + String.join(recordIds.split(','), '\',\'') + '\')';
+    query +=
+      ' WHERE Id IN (\'' +
+      String.join(recordIds.split(','), '\',\'') +
+      '\')';
     if (String.isNotBlank(conditions)) {
       query += ' AND ' + conditions;
     }
@@ -93,12 +112,25 @@ public with sharing class FilterDataService extends DataService {
   }
 
   @AuraEnabled(cacheable=false)
-  public static Result queryRecordIds(String objectApiName, String fieldApiNames, String formDataJson, String customLogic) {
-    String conditions = getConditions(objectApiName, fieldApiNames, formDataJson, customLogic);
+  public static Result queryRecordIds(
+    String objectApiName,
+    String fieldApiNames,
+    String formDataJson,
+    String customLogic
+  ) {
+    String conditions = getConditions(
+      objectApiName,
+      fieldApiNames,
+      formDataJson,
+      customLogic
+    );
     String query = 'SELECT Id FROM ' + objectApiName;
     if (String.isNotBlank(conditions)) {
       query += ' WHERE ' + conditions;
     }
+
+    System.debug(query);
+
     List<Id> recordIds = performQuery(query);
 
     return new Result(recordIds);
@@ -108,8 +140,11 @@ public with sharing class FilterDataService extends DataService {
   public static Result getRecord(String recordId, String fieldNames) {
     try {
       Id recordIdFromString = recordId;
-      String objectName = recordIdFromString.getSObjectType().getDescribe().getName();
-      Schema.DescribeSObjectResult dsor = recordIdFromString.getSObjectType().getDescribe(SObjectDescribeOptions.DEFERRED);
+      String objectName = recordIdFromString.getSObjectType()
+        .getDescribe()
+        .getName();
+      Schema.DescribeSObjectResult dsor = recordIdFromString.getSObjectType()
+        .getDescribe(SObjectDescribeOptions.DEFERRED);
 
       List<String> fieldNameList = new List<String>();
       for (String fieldName : fieldNames.split(',')) {
@@ -118,14 +153,26 @@ public with sharing class FilterDataService extends DataService {
 
       Set<String> fieldNameSet = new Set<String>{ 'Id' };
       for (String fieldName : fieldNameList) {
-        if (String.isNotBlank(fieldName) && dsor.fields.getMap().containsKey(fieldName) && dsor.fields.getMap().get(fieldName).getDescribe().isAccessible()) {
+        if (
+          String.isNotBlank(fieldName) &&
+          dsor.fields.getMap().containsKey(fieldName) &&
+          dsor.fields.getMap().get(fieldName).getDescribe().isAccessible()
+        ) {
           fieldNameSet.add(fieldName);
         }
       }
 
       SObject record = null;
       if (!fieldNameSet.isEmpty()) {
-        record = Database.query('SELECT ' + String.join(new List<String>(fieldNameSet), ',') + ' FROM ' + objectName + ' WHERE Id = \'' + recordId + '\'');
+        record = Database.query(
+          'SELECT ' +
+            String.join(new List<String>(fieldNameSet), ',') +
+            ' FROM ' +
+            objectName +
+            ' WHERE Id = \'' +
+            recordId +
+            '\''
+        );
       }
 
       return new Result(record);
@@ -134,18 +181,24 @@ public with sharing class FilterDataService extends DataService {
     }
   }
 
-  private static List<InputInfo> createInputInfos(List<Describer.FieldInfo> fieldInfos) {
+  private static List<InputInfo> createInputInfos(
+    List<Describer.FieldInfo> fieldInfos
+  ) {
     List<InputInfo> inputInfos = new List<InputInfo>();
     for (Integer i = 0; i < fieldInfos.size(); i++) {
       inputInfos.add(createInputInfo(fieldInfos[i], i));
     }
     return inputInfos;
   }
-  private static InputInfo createInputInfo(Describer.FieldInfo fieldInfo, Integer index) {
+  private static InputInfo createInputInfo(
+    Describer.FieldInfo fieldInfo,
+    Integer index
+  ) {
     InputInfo inputInfo = new InputInfo();
     inputInfo.name = fieldInfo.queriableFieldApiName;
     inputInfo.fieldApiName = fieldInfo.fieldPath;
     inputInfo.index = index;
+    inputInfo.isRelative = fieldInfo.isRelative;
 
     Schema.DescribeSObjectResult dsor = fieldInfo.describeSObjectResult;
     inputInfo.objectInfo = (new ObjectInfo(dsor.getName(), dsor.getLabel()));
@@ -153,10 +206,16 @@ public with sharing class FilterDataService extends DataService {
     Schema.DescribeFieldResult dfr = fieldInfo.describeFieldResult;
     inputInfo.type = dfr.getType().name();
     inputInfo.label = dfr.getLabel();
-    inputInfo.step = dfr.getScale() > 0 ? 1.0 / Math.pow(10, dfr.getScale()) : null;
+    inputInfo.step = dfr.getScale() > 0
+      ? 1.0 / Math.pow(10, dfr.getScale())
+      : null;
     inputInfo.isFilterable = dfr.isFilterable();
 
-    if (dfr.getType().name() == 'PICKLIST' || dfr.getType().name() == 'MULTIPICKLIST' || dfr.getType().name() == 'COMBOBOX') {
+    if (
+      dfr.getType().name() == 'PICKLIST' ||
+      dfr.getType().name() == 'MULTIPICKLIST' ||
+      dfr.getType().name() == 'COMBOBOX'
+    ) {
       List<Schema.PicklistEntry> picklistEntries = dfr.getPicklistValues();
       inputInfo.options = new List<SelectOption>();
       for (Schema.PicklistEntry e : picklistEntries) {
@@ -179,7 +238,12 @@ public with sharing class FilterDataService extends DataService {
     }
   }
 
-  private static String getConditions(String objectApiName, String fieldApiNames, String formDataJson, String customLogic) {
+  private static String getConditions(
+    String objectApiName,
+    String fieldApiNames,
+    String formDataJson,
+    String customLogic
+  ) {
     List<Describer.FieldInfo> fieldInfos = new List<Describer.FieldInfo>();
     try {
       fieldInfos = Describer.describeFields(objectApiName, fieldApiNames);
@@ -189,7 +253,10 @@ public with sharing class FilterDataService extends DataService {
 
     Map<String, FormDataValue> formData = new Map<String, FormDataValue>();
     try {
-      formData = (Map<String, FormDataValue>) JSON.deserialize(formDataJson, Map<String, FormDataValue>.class);
+      formData = (Map<String, FormDataValue>) JSON.deserialize(
+        formDataJson,
+        Map<String, FormDataValue>.class
+      );
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -208,11 +275,19 @@ public with sharing class FilterDataService extends DataService {
     String conditions = ' ';
     for (LexerV2.Token token : reducedToken) {
       if (token.kind == LexerV2.Kind.NUM) {
-        Describer.FieldInfo fieldInfo = fieldInfos[Integer.valueOf(token.lexeme) - 1];
+        Describer.FieldInfo fieldInfo = fieldInfos[
+          Integer.valueOf(token.lexeme) - 1
+        ];
         Schema.DescribeFieldResult dfr = fieldInfo.describeFieldResult;
         String fieldName = fieldInfo.fieldPath;
         FormDataValue fdv = formData.get(fieldName);
-        conditions += ' ' + getWhereCondition(fieldInfo.queriableFieldApiName, dfr.getType().name(), fdv);
+        conditions +=
+          ' ' +
+          getWhereCondition(
+            fieldInfo.queriableFieldApiName,
+            dfr.getType().name(),
+            fdv
+          );
       } else {
         conditions += ' ' + token.lexeme;
       }
@@ -221,7 +296,11 @@ public with sharing class FilterDataService extends DataService {
   }
 
   @TestVisible
-  private static String getWhereCondition(String fieldName, String type, FormDataValue fdv) {
+  private static String getWhereCondition(
+    String fieldName,
+    String type,
+    FormDataValue fdv
+  ) {
     String whereCondition = '';
     String value = fdv.value;
     String minValue = fdv.minValue;
@@ -230,31 +309,76 @@ public with sharing class FilterDataService extends DataService {
     switch on type {
       when 'STRING', 'EMAIL', 'URL', 'PHONE', 'TEXTAREA' {
         if (value.contains('*')) {
-          whereCondition = fieldName + ' LIKE \'' + (value.startsWith('*') ? '%' : '') + value.removeStart('*').removeEnd('*') + (value.endsWith('*') ? '%' : '') + '\'';
+          whereCondition =
+            fieldName +
+            ' LIKE \'' +
+            (value.startsWith('*') ? '%' : '') +
+            value.removeStart('*').removeEnd('*') +
+            (value.endsWith('*') ? '%' : '') +
+            '\'';
         } else {
           whereCondition = fieldName + ' = \'' + value + '\'';
         }
       }
       when 'PERCENT', 'CURRENCY', 'DOUBLE' {
         if (String.isNotBlank(minValue)) {
-          whereCondition = fieldName + ' >= ' + (minValue.contains('.') ? minValue : minValue + '.0');
+          whereCondition =
+            fieldName +
+            ' >= ' +
+            (minValue.contains('.') ? minValue : minValue + '.0');
         }
-        whereCondition += String.isNotBlank(minValue) && String.isNotBlank(maxValue) ? ' AND ' : '';
+        whereCondition += String.isNotBlank(minValue) &&
+          String.isNotBlank(maxValue)
+          ? ' AND '
+          : '';
         if (String.isNotBlank(maxValue)) {
-          whereCondition += fieldName + ' <= ' + (maxValue.contains('.') ? maxValue : maxValue + '.0');
+          whereCondition +=
+            fieldName +
+            ' <= ' +
+            (maxValue.contains('.') ? maxValue : maxValue + '.0');
         }
       }
-      when 'INTEGER', 'DATE' {
-        whereCondition = String.isNotBlank(minValue) ? fieldName + ' >= ' + minValue : '';
-        whereCondition += String.isNotBlank(minValue) && String.isNotBlank(maxValue) ? ' AND ' : '';
-        whereCondition += String.isNotBlank(maxValue) ? fieldName + ' <= ' + maxValue : '';
+      when 'INTEGER' {
+        whereCondition = String.isNotBlank(minValue)
+          ? fieldName + ' >= ' + minValue
+          : '';
+        whereCondition += String.isNotBlank(minValue) &&
+          String.isNotBlank(maxValue)
+          ? ' AND '
+          : '';
+        whereCondition += String.isNotBlank(maxValue)
+          ? fieldName + ' <= ' + maxValue
+          : '';
+      }
+      when 'DATE' {
+        if (String.isNotBlank(value)) {
+          whereCondition = fieldName + ' = ' + value;
+        } else {
+          whereCondition = String.isNotBlank(minValue)
+            ? fieldName + ' >= ' + minValue
+            : '';
+          whereCondition += String.isNotBlank(minValue) &&
+            String.isNotBlank(maxValue)
+            ? ' AND '
+            : '';
+          whereCondition += String.isNotBlank(maxValue)
+            ? fieldName + ' <= ' + maxValue
+            : '';
+        }
       }
       when 'TIME' {
-        whereCondition = String.isNotBlank(minValue) ? fieldName + ' >= ' + minValue : '';
-        whereCondition += String.isNotBlank(minValue) && String.isNotBlank(maxValue) ? ' AND ' : '';
+        whereCondition = String.isNotBlank(minValue)
+          ? fieldName + ' >= ' + minValue
+          : '';
+        whereCondition += String.isNotBlank(minValue) &&
+          String.isNotBlank(maxValue)
+          ? ' AND '
+          : '';
         if (String.isNotBlank(maxValue)) {
-          System.debug(maxValue);
-          Time toTime = (Time) JSON.deserialize('"' + maxValue + '"', Time.class);
+          Time toTime = (Time) JSON.deserialize(
+            '"' + maxValue + '"',
+            Time.class
+          );
           String hh = ('' + toTime.hour()).leftPad(2, '0');
           String mm = ('' + toTime.minute()).leftPad(2, '0');
           String ss = ('' + toTime.second()).leftPad(2, '0');
@@ -262,52 +386,120 @@ public with sharing class FilterDataService extends DataService {
           if (toTime.millisecond() == 0 && toTime.second() == 0) {
             whereCondition += fieldName + ' <= ' + hh + ':' + mm + ':59.999Z';
           } else if (toTime.millisecond() == 0) {
-            whereCondition += fieldName + ' <= ' + hh + ':' + mm + ':' + ss + '.999Z';
+            whereCondition +=
+              fieldName +
+              ' <= ' +
+              hh +
+              ':' +
+              mm +
+              ':' +
+              ss +
+              '.999Z';
           } else {
-            whereCondition += fieldName + ' <= ' + hh + ':' + mm + ':' + ss + '.' + SSS + 'Z';
+            whereCondition +=
+              fieldName +
+              ' <= ' +
+              hh +
+              ':' +
+              mm +
+              ':' +
+              ss +
+              '.' +
+              SSS +
+              'Z';
           }
         }
       }
       when 'DATETIME' {
-        whereCondition = String.isNotBlank(minValue) ? fieldName + ' >= ' + minValue : '';
-        whereCondition += String.isNotBlank(minValue) && String.isNotBlank(maxValue) ? ' AND ' : '';
-        if (String.isNotBlank(maxValue)) {
-          Datetime dt = (Datetime) JSON.deserialize('"' + maxValue + '"', Datetime.class);
-          if (dt.millisecond() == 0 && dt.second() == 0) {
-            whereCondition += fieldName + ' <= ' + dt.formatGMT('yyyy-MM-dd\'T\'HH:mm') + ':59.999Z';
-          } else if (dt.millisecond() == 0) {
-            whereCondition += fieldName + ' <= ' + dt.formatGMT('yyyy-MM-dd\'T\'HH:mm:ss') + '.999Z';
-          } else {
-            whereCondition += fieldName + ' <= ' + dt.formatGMT('yyyy-MM-dd\'T\'HH:mm:ss.SSS') + 'Z';
+        if (String.isNotBlank(value)) {
+          whereCondition = fieldName + ' = ' + value;
+        } else {
+          whereCondition = String.isNotBlank(minValue)
+            ? fieldName + ' >= ' + minValue
+            : '';
+          whereCondition += String.isNotBlank(minValue) &&
+            String.isNotBlank(maxValue)
+            ? ' AND '
+            : '';
+          if (String.isNotBlank(maxValue)) {
+            Datetime dt = (Datetime) JSON.deserialize(
+              '"' + maxValue + '"',
+              Datetime.class
+            );
+            if (dt.millisecond() == 0 && dt.second() == 0) {
+              whereCondition +=
+                fieldName +
+                ' <= ' +
+                dt.formatGMT('yyyy-MM-dd\'T\'HH:mm') +
+                ':59.999Z';
+            } else if (dt.millisecond() == 0) {
+              whereCondition +=
+                fieldName +
+                ' <= ' +
+                dt.formatGMT('yyyy-MM-dd\'T\'HH:mm:ss') +
+                '.999Z';
+            } else {
+              whereCondition +=
+                fieldName +
+                ' <= ' +
+                dt.formatGMT('yyyy-MM-dd\'T\'HH:mm:ss.SSS') +
+                'Z';
+            }
           }
         }
       }
       when 'ID' {
-        whereCondition = String.isNotBlank(value) ? fieldName + ' = \'' + value + '\'' : '';
+        whereCondition = String.isNotBlank(value)
+          ? fieldName + ' = \'' + value + '\''
+          : '';
       }
       when 'PICKLIST' {
-        whereCondition = String.isNotBlank(value) ? fieldName + ' IN (\'' + String.join(value.split(','), '\',\'') + '\')' : '';
+        whereCondition = String.isNotBlank(value)
+          ? fieldName +
+            ' IN (\'' +
+            String.join(value.split(','), '\',\'') +
+            '\')'
+          : '';
       }
       when 'MULTIPICKLIST' {
-        whereCondition = String.isNotBlank(value) ? fieldName + ' INCLUDES (\'' + String.join(value.split(','), '\',\'') + '\')' : '';
+        whereCondition = String.isNotBlank(value)
+          ? fieldName +
+            ' INCLUDES (\'' +
+            String.join(value.split(','), '\',\'') +
+            '\')'
+          : '';
       }
       when 'BOOLEAN' {
-        whereCondition = String.isNotBlank(value) ? fieldName + ' = ' + (value.trim().toLowerCase() == 'true') : '';
+        whereCondition = String.isNotBlank(value)
+          ? fieldName + ' = ' + (value.trim().toLowerCase() == 'true')
+          : '';
       }
     }
     return whereCondition;
   }
 
   @TestVisible
-  private static List<LexerV2.Token> reduceTokens(List<LexerV2.Token> tokens, List<String> validLexemes) {
+  private static List<LexerV2.Token> reduceTokens(
+    List<LexerV2.Token> tokens,
+    List<String> validLexemes
+  ) {
     List<LexerV2.Token> reducedTokens = new List<LexerV2.Token>();
-    if (tokens != null && !tokens.isEmpty() && validLexemes != null && !validLexemes.isEmpty()) {
+    if (
+      tokens != null &&
+      !tokens.isEmpty() &&
+      validLexemes != null &&
+      !validLexemes.isEmpty()
+    ) {
       LexerV2.Token prev = null;
       LexerV2.Token token;
       for (Integer i = 0; i < tokens.size(); i++) {
         token = tokens[i];
-        prev = reducedTokens.size() > 0 ? reducedTokens[reducedTokens.size() - 1] : null;
-        if (token.kind == LexerV2.Kind.NUM && !validLexemes.contains(token.lexeme)) {
+        prev = reducedTokens.size() > 0
+          ? reducedTokens[reducedTokens.size() - 1]
+          : null;
+        if (
+          token.kind == LexerV2.Kind.NUM && !validLexemes.contains(token.lexeme)
+        ) {
           continue;
         } else if (token.kind == LexerV2.Kind.LOGICALAND) {
           if (prev == null) {
@@ -355,7 +547,9 @@ public with sharing class FilterDataService extends DataService {
           reducedTokens.add(token);
         }
       }
-      prev = reducedTokens.size() > 0 ? reducedTokens[reducedTokens.size() - 1] : null;
+      prev = reducedTokens.size() > 0
+        ? reducedTokens[reducedTokens.size() - 1]
+        : null;
       if (prev == null) {
       } else if (prev.kind == LexerV2.Kind.LOGICALAND) {
         reducedTokens.remove(reducedTokens.size() - 1);

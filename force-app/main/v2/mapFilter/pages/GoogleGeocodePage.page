@@ -1,0 +1,116 @@
+<apex:page showHeader="false" sidebar="false">
+  <html>
+    <head>
+      <script>
+        let messagePort = null;
+        let geocoderInstance = null;
+        let googleMapsLoaded = false;
+
+        // Listen for messages from the parent (LWC)
+        window.addEventListener("message", function (event) {
+          const data = event.data;
+          if (data && data.type === "INIT_MESSAGE_CHANNEL") {
+            if (event.ports[0]) {
+              messagePort = event.ports[0];
+              messagePort.onmessage = handleMessage;
+              messagePort.start();
+
+              // Send a confirmation message back to the parent
+              messagePort.postMessage({ type: "CHANNEL_INITIALIZED" });
+            }
+          }
+        });
+
+        // Handle incoming messages on the MessageChannel
+        function handleMessage(event) {
+          const data = event.data;
+          if (data && data.type === "GEOCODE_REQUEST") {
+            const apiKey = data.apiKey;
+            const address = data.address;
+            const requestId = data.requestId;
+            if (!googleMapsLoaded) {
+              loadGoogleMaps(apiKey)
+                .then(() => {
+                  geocodeAddress(address, requestId);
+                })
+                .catch((err) => {
+                  sendError(requestId, err.message);
+                });
+            } else {
+              geocodeAddress(address, requestId);
+            }
+          }
+        }
+
+        // Dynamically load the Google Maps JavaScript API
+        function loadGoogleMaps(apiKey) {
+          return new Promise((resolve, reject) => {
+            if (googleMapsLoaded) {
+              resolve();
+              return;
+            }
+            const script = document.createElement("script");
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+              googleMapsLoaded = true;
+              geocoderInstance = new google.maps.Geocoder();
+              resolve();
+            };
+
+            script.onerror = () => {
+              reject(new Error("Failed to load the Google Maps API."));
+            };
+
+            document.head.appendChild(script);
+          });
+        }
+
+        // Perform geocoding using the Google Maps Geocoder
+        function geocodeAddress(address, requestId) {
+          if (!geocoderInstance) {
+            sendError(requestId, "Geocoder has not been initialized.");
+            return;
+          }
+
+          geocoderInstance.geocode(
+            { address: address },
+            function (results, status) {
+              if (status === "OK") {
+                const location = results[0].geometry.location;
+                const response = {
+                  type: "GEOCODE_RESPONSE",
+                  requestId: requestId,
+                  latitude: location.lat(),
+                  longitude: location.lng()
+                };
+                messagePort.postMessage(response);
+              } else {
+                const response = {
+                  type: "GEOCODE_ERROR",
+                  requestId: requestId,
+                  message: "Geocoding failed: " + status
+                };
+                messagePort.postMessage(response);
+              }
+            }
+          );
+        }
+
+        // Send error messages back to the parent
+        function sendError(requestId, message) {
+          const response = {
+            type: "GEOCODE_ERROR",
+            requestId: requestId,
+            message: message
+          };
+          messagePort.postMessage(response);
+        }
+      </script>
+    </head>
+    <body>
+      <!-- Empty body -->
+    </body>
+  </html>
+</apex:page>

@@ -29,7 +29,7 @@ const throwConfigurationError = (error, errorCode) => {
     errorMessage = error;
   } else if (Array.isArray(error.body)) {
     errorMessage = error.body.map((e) => e.message).join(", ");
-  } else if (typeof error.body.message === "string") {
+  } else if (typeof error.body?.message === "string") {
     errorMessage = error.body.message;
   }
   throw new ConfigurationError(errorCode, errorMessage);
@@ -47,4 +47,9 @@ const throwRuntimeError = (error, errorCode) => {
   throw new RuntimeError(errorCode, errorMessage);
 };
 
-export {RuntimeError, ConfigurationError, throwConfigurationError, throwRuntimeError};
+export {
+  RuntimeError,
+  ConfigurationError,
+  throwConfigurationError,
+  throwRuntimeError
+};

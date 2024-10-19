@@ -13,7 +13,12 @@ public with sharing class Describer {
     public String fieldPath;
     public String errorMessage;
     public Boolean hasError = false;
-    public FieldInfo(Schema.DescribeSObjectResult describeSObjectResult, Schema.DescribeFieldResult describeFieldResult, String queriableFieldApiName) {
+    public Boolean isRelative = false;
+    public FieldInfo(
+      Schema.DescribeSObjectResult describeSObjectResult,
+      Schema.DescribeFieldResult describeFieldResult,
+      String queriableFieldApiName
+    ) {
       this.describeSObjectResult = describeSObjectResult;
       this.describeFieldResult = describeFieldResult;
       this.queriableFieldApiName = queriableFieldApiName;
@@ -24,7 +29,10 @@ public with sharing class Describer {
     }
   }
 
-  public static Schema.DescribeFieldResult describeField(String objectApiName, String fieldApiName) {
+  public static Schema.DescribeFieldResult describeField(
+    String objectApiName,
+    String fieldApiName
+  ) {
     if (String.isBlank(objectApiName)) {
       throwException('"objectApiName" must not be blank.');
     }
@@ -32,36 +40,57 @@ public with sharing class Describer {
       throwException('"fieldApiName" must not be blank.');
     }
 
-    Schema.DescribeSObjectResult dsor = Schema.getGlobalDescribe().get(objectApiName.trim())?.getDescribe(SObjectDescribeOptions.DEFERRED);
+    Schema.DescribeSObjectResult dsor = Schema.getGlobalDescribe()
+      .get(objectApiName.trim())
+      ?.getDescribe(SObjectDescribeOptions.DEFERRED);
     if (dsor == null) {
-      throwException('"' + objectApiName + '" is not a valid Salesforce Object API Name.');
+      throwException(
+        '"' + objectApiName + '" is not a valid Salesforce Object API Name.'
+      );
     }
 
-    Schema.DescribeFieldResult dfr = dsor.fields.getMap().get(fieldApiName)?.getDescribe();
+    Schema.DescribeFieldResult dfr = dsor.fields.getMap()
+      .get(fieldApiName)
+      ?.getDescribe();
     if (dfr == null) {
       throwException('"' + fieldApiName + '" is not a valid field API Name.');
     }
     return dfr;
   }
 
-  public static Schema.DescribeSObjectResult describeSObject(String objectApiName) {
+  public static Schema.DescribeSObjectResult describeSObject(
+    String objectApiName
+  ) {
     if (String.isBlank(objectApiName)) {
       throwException('"objectApiName" must not be blank.');
     }
-    Schema.DescribeSObjectResult dsor = Schema.getGlobalDescribe().get(objectApiName.trim())?.getDescribe(SObjectDescribeOptions.DEFERRED);
+    Schema.DescribeSObjectResult dsor = Schema.getGlobalDescribe()
+      .get(objectApiName.trim())
+      ?.getDescribe(SObjectDescribeOptions.DEFERRED);
     if (dsor == null) {
-      throwException('"' + objectApiName + '" is not a valid Salesforce Object API Name.');
+      throwException(
+        '"' + objectApiName + '" is not a valid Salesforce Object API Name.'
+      );
     }
     return dsor;
   }
 
-  public static List<FieldInfo> describeFields(String objectApiName, String fieldApiNames) {
+  public static List<FieldInfo> describeFields(
+    String objectApiName,
+    String fieldApiNames
+  ) {
     List<FieldInfo> results = new List<FieldInfo>();
     try {
-      List<String> fieldPaths = String.isNotBlank(fieldApiNames) ? fieldApiNames.split('\\,') : new List<String>();
+      List<String> fieldPaths = String.isNotBlank(fieldApiNames)
+        ? fieldApiNames.split('\\,')
+        : new List<String>();
 
       for (String fieldPath : fieldPaths) {
-        FieldInfo fieldInfo = describeField(objectApiName?.trim(), fieldPath.trim(), new List<String>());
+        FieldInfo fieldInfo = describeField(
+          objectApiName?.trim(),
+          fieldPath.trim(),
+          new List<String>()
+        );
         fieldInfo.fieldPath = fieldPath.trim();
         results.add(fieldInfo);
       }
@@ -72,7 +101,11 @@ public with sharing class Describer {
   }
 
   @TestVisible
-  private static FieldInfo describeField(String objectApiName, String fieldPath, List<String> relationshipNames) {
+  private static FieldInfo describeField(
+    String objectApiName,
+    String fieldPath,
+    List<String> relationshipNames
+  ) {
     if (relationshipNames == null) {
       relationshipNames = new List<String>();
     }
@@ -82,9 +115,13 @@ public with sharing class Describer {
       return new FieldInfo('fieldPath must not be empty.');
     }
 
-    Schema.DescribeSObjectResult dsor = Schema.getGlobalDescribe().get(objectApiName)?.getDescribe(SObjectDescribeOptions.DEFERRED);
+    Schema.DescribeSObjectResult dsor = Schema.getGlobalDescribe()
+      .get(objectApiName)
+      ?.getDescribe(SObjectDescribeOptions.DEFERRED);
     if (dsor == null) {
-      throwException('"' + objectApiName + '" is not a valid Salesforce Object API Name.');
+      throwException(
+        '"' + objectApiName + '" is not a valid Salesforce Object API Name.'
+      );
     }
 
     List<String> fieldPathComponents = fieldPath.split('\\.');
@@ -92,19 +129,45 @@ public with sharing class Describer {
     String fieldApiName = fieldPathComponent.substringBefore(':');
     String preferedObjectApiName = fieldPathComponent.substringAfter(':');
 
-    Schema.DescribeFieldResult dfr = dsor.fields.getMap().get(fieldApiName)?.getDescribe();
+    Schema.DescribeFieldResult dfr = dsor.fields.getMap()
+      .get(fieldApiName)
+      ?.getDescribe();
     if (dfr == null) {
-      return new FieldInfo('"' + fieldApiName + '" is not a valid field API name.');
+      return new FieldInfo(
+        '"' + fieldApiName + '" is not a valid field API name.'
+      );
     }
 
-    if (dfr.getType() == Schema.DisplayType.REFERENCE && fieldPathComponents.size() > 0) {
+    if (
+      dfr.getType() == Schema.DisplayType.REFERENCE &&
+      fieldPathComponents.size() > 0
+    ) {
       if (dfr.getRelationshipName() == null) {
-        return new FieldInfo('"' + fieldApiName + '"  is not a valid reference field API name.');
+        return new FieldInfo(
+          '"' + fieldApiName + '"  is not a valid reference field API name.'
+        );
       }
-      String reducedObjectApiName = getReferenceToObjectApiName(dfr, preferedObjectApiName);
+      String reducedObjectApiName = getReferenceToObjectApiName(
+        dfr,
+        preferedObjectApiName
+      );
       String reducedFieldPath = String.join(fieldPathComponents, '.');
       relationshipNames.add(dfr.getRelationshipName());
-      return describeField(reducedObjectApiName, reducedFieldPath, relationshipNames);
+      return describeField(
+        reducedObjectApiName,
+        reducedFieldPath,
+        relationshipNames
+      );
+    } else if (
+      dfr.getType() == Schema.DisplayType.DATE ||
+      dfr.getType() == Schema.DisplayType.DATETIME
+    ) {
+      FieldInfo field = new FieldInfo(dsor, dfr, fieldApiName);
+      if (preferedObjectApiName == 'relative') {
+        field.fieldPath = field.fieldPath?.split(':')[0];
+        field.isRelative = true;
+      }
+      return field;
     } else {
       relationshipNames.add(dfr.getName());
       return new FieldInfo(dsor, dfr, String.join(relationshipNames, '.'));
@@ -112,9 +175,15 @@ public with sharing class Describer {
   }
 
   @TestVisible
-  private static String getReferenceToObjectApiName(Schema.DescribeFieldResult dfr, String preferedObjectApiName) {
+  private static String getReferenceToObjectApiName(
+    Schema.DescribeFieldResult dfr,
+    String preferedObjectApiName
+  ) {
     for (Schema.SObjectType sot : dfr.getReferenceTo()) {
-      if (sot.getDescribe().getName().toLowerCase() == preferedObjectApiName.toLowerCase()) {
+      if (
+        sot.getDescribe().getName().toLowerCase() ==
+        preferedObjectApiName.toLowerCase()
+      ) {
         return sot.getDescribe().getName();
       }
     }

@@ -1,7 +1,13 @@
-import {LightningElement, wire} from "lwc";
-import {publish, subscribe, unsubscribe, MessageContext} from "lightning/messageService";
+import { LightningElement, wire } from "lwc";
+import {
+  publish,
+  subscribe,
+  unsubscribe,
+  MessageContext
+} from "lightning/messageService";
 import recordHunterRecordMessageChannel from "@salesforce/messageChannel/recordHunterRecordMessageChannel__c";
 import recordHunterTriggerMessageChannel from "@salesforce/messageChannel/recordHunterTriggerMessageChannel__c";
+import recordHunterInitMessageChannel from "@salesforce/messageChannel/recordHunterInitMessageChannel__c";
 
 export default class InteractiveLightningElement extends LightningElement {
   /****************************************/
@@ -19,19 +25,26 @@ export default class InteractiveLightningElement extends LightningElement {
   // Record Message Channel
   subscribeRecordMessage(acceptedComponentIds, callback) {
     if (!this.recordHunterRecordMessageSubscription) {
-      this.recordHunterRecordMessageSubscription = subscribe(this.messageContext, recordHunterRecordMessageChannel, (payload) => {
-        const sourceComponentId = payload.sourceComponentId;
-        const acceptedSourceComponentIdList = acceptedComponentIds?.split(",") || [];
-        if (this.componentId !== sourceComponentId) {
-          const matchedCmpIds = acceptedSourceComponentIdList.filter((acceptedSrcCmpId) => {
-            return sourceComponentId === acceptedSrcCmpId;
-          });
-          if (matchedCmpIds.length > 0) {
-            this.rootComponentId = payload.rootComponentId;
-            callback(payload);
+      this.recordHunterRecordMessageSubscription = subscribe(
+        this.messageContext,
+        recordHunterRecordMessageChannel,
+        (payload) => {
+          const sourceComponentId = payload.sourceComponentId;
+          const acceptedSourceComponentIdList =
+            acceptedComponentIds?.split(",") || [];
+          if (this.componentId !== sourceComponentId) {
+            const matchedCmpIds = acceptedSourceComponentIdList.filter(
+              (acceptedSrcCmpId) => {
+                return sourceComponentId === acceptedSrcCmpId;
+              }
+            );
+            if (matchedCmpIds.length > 0) {
+              this.rootComponentId = payload.rootComponentId;
+              callback(payload);
+            }
           }
         }
-      });
+      );
     }
   }
   unsubscribeRecordMessage() {
@@ -39,19 +52,30 @@ export default class InteractiveLightningElement extends LightningElement {
     this.recordHunterRecordMessageSubscription = null;
   }
   publishRecordMessage(recordIds) {
-    publish(this.messageContext, recordHunterRecordMessageChannel, {recordIds, sourceComponentId: this.componentId, rootComponentId: this.rootComponentId});
+    publish(this.messageContext, recordHunterRecordMessageChannel, {
+      recordIds,
+      sourceComponentId: this.componentId,
+      rootComponentId: this.rootComponentId
+    });
   }
 
   subscribeTriggerMessage(callback) {
     if (!this.recordHunterTriggerMessageSubscription) {
-      this.recordHunterTriggerMessageSubscription = subscribe(this.messageContext, recordHunterTriggerMessageChannel, (payload) => {
-        const sourceComponentId = payload.sourceComponentId;
-        const targetComponentId = payload.targetComponentId;
-        if (this.componentId !== sourceComponentId && this.componentId === targetComponentId) {
-          this.rootComponentId = this.componentId;
-          callback(payload);
+      this.recordHunterTriggerMessageSubscription = subscribe(
+        this.messageContext,
+        recordHunterTriggerMessageChannel,
+        (payload) => {
+          const sourceComponentId = payload.sourceComponentId;
+          const targetComponentId = payload.targetComponentId;
+          if (
+            this.componentId !== sourceComponentId &&
+            this.componentId === targetComponentId
+          ) {
+            this.rootComponentId = this.componentId;
+            callback(payload);
+          }
         }
-      });
+      );
     }
   }
   unsubscribeTriggerMessage() {
@@ -59,6 +83,28 @@ export default class InteractiveLightningElement extends LightningElement {
     this.recordHunterTriggerMessageSubscription = null;
   }
   publishTriggerMessage(targetComponentId) {
-    publish(this.messageContext, recordHunterTriggerMessageChannel, {sourceComponentId: this.componentId, targetComponentId});
+    publish(this.messageContext, recordHunterTriggerMessageChannel, {
+      sourceComponentId: this.componentId,
+      targetComponentId
+    });
+  }
+
+  subscribeInitMessage(callback) {
+    if (!this.recordHunterInitMessageSubscription) {
+      this.recordHunterInitMessageSubscription = subscribe(
+        this.messageContext,
+        recordHunterInitMessageChannel,
+        () => {
+          callback();
+        }
+      );
+    }
+  }
+  unsubscribeInitMessage() {
+    unsubscribe(this.recordHunterInitMessageSubscription);
+    this.recordHunterInitMessageSubscription = null;
+  }
+  publishInitMessage() {
+    publish(this.messageContext, recordHunterInitMessageChannel);
   }
 }

@@ -1,0 +1,22 @@
+<template>
+  <div class="container">
+    <template lwc:if={lightningMapAttributes}>
+      <lightning-map lwc:spread={lightningMapAttributes}></lightning-map>
+    </template>
+    <template lwc:if={mapFilterInputAttributes}>
+      <div class="form">
+        <div class="slds-box slds-box_x-small slds-theme_default">
+          <c-map-filter-input
+            lwc:spread={mapFilterInputAttributes}
+            onchange={onMapFilterValueChanged}
+          ></c-map-filter-input>
+        </div>
+      </div>
+    </template>
+  </div>
+  <template if:true={showSpinner}>
+    <lightning-spinner alternative-text="Loading..."> </lightning-spinner>
+  </template>
+
+  <c-google-geocode></c-google-geocode>
+</template>

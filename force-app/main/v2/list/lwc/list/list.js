@@ -1,9 +1,9 @@
-import {api, wire} from "lwc";
+import { api, wire } from "lwc";
 import InteractiveLightningElement from "c/interactiveLightningElement";
 import getColumnInfos from "@salesforce/apex/ListDataService.getColumnInfos";
 import queryRecordsByIds from "@salesforce/apex/ListDataService.queryRecordsByIds";
-import {getColumnTypeAttributes, getColumnType, getRows} from "./listUtils";
-import {throwConfigurationError, throwRuntimeError} from "c/errorService";
+import { getColumnTypeAttributes, getColumnType, getRows } from "./listUtils";
+import { throwConfigurationError, throwRuntimeError } from "c/errorService";
 export default class List extends InteractiveLightningElement {
   /*
    *  Public Properties
@@ -51,7 +51,7 @@ export default class List extends InteractiveLightningElement {
     objectApiName: "$objectApiName",
     fieldApiNames: "$fieldApiNames"
   })
-  wiredGetColumnInfos({error, data}) {
+  wiredGetColumnInfos({ error, data }) {
     if (data && !data.hasError) {
       const columnInfos = data.body;
       this.columns = columnInfos.map((columnInfo) => {
@@ -80,14 +80,19 @@ export default class List extends InteractiveLightningElement {
     this.loadData();
   }
   onLoadMore() {
-    const hasNext = this.recordIds.split(",").length > this.pageIndex * this.pageSize;
+    const hasNext =
+      this.recordIds.split(",").length > this.pageIndex * this.pageSize;
     if (hasNext) {
       this.pageIndex++;
       this.loadData();
     }
   }
   onRowSelection(e) {
-    this.dispatchEvent(new CustomEvent("rowselected", {detail: {selectedRows: e.detail.selectedRows}}));
+    this.dispatchEvent(
+      new CustomEvent("rowselected", {
+        detail: { selectedRows: e.detail.selectedRows }
+      })
+    );
   }
 
   /*
@@ -100,7 +105,7 @@ export default class List extends InteractiveLightningElement {
 
     // Enable interactions
     this.enableInteraction(this.componentId);
-    this.subscribeRecordMessage(this.sourceComponentIds, ({recordIds}) => {
+    this.subscribeRecordMessage(this.sourceComponentIds, ({ recordIds }) => {
       this.recordIds = recordIds;
       this.pageIndex = 0;
       this.loadData();
@@ -108,6 +113,12 @@ export default class List extends InteractiveLightningElement {
   }
   disconnectedCallback() {
     this.unsubscribeRecordMessage();
+  }
+  renderedCallback() {
+    if (!this.isRendered) {
+      this.isRendered = true;
+      this.publishInitMessage();
+    }
   }
 
   /*
@@ -141,7 +152,8 @@ export default class List extends InteractiveLightningElement {
           new CustomEvent("load", {
             detail: {
               numberOfRecords: this.data.length,
-              totalNumberOfRecords: this.recordIds.length > 0 ? this.recordIds.split(",").length : 0
+              totalNumberOfRecords:
+                this.recordIds.length > 0 ? this.recordIds.split(",").length : 0
             }
           })
         );
