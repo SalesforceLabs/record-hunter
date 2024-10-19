@@ -1,25 +1,30 @@
-import {api, wire} from "lwc";
+import { api, wire } from "lwc";
 import InteractiveLightningElement from "c/interactiveLightningElement";
 import getInputInfos from "@salesforce/apex/FilterDataService.getInputInfos";
 import filterRecordIds from "@salesforce/apex/FilterDataService.filterRecordIds";
 import queryRecordIds from "@salesforce/apex/FilterDataService.queryRecordIds";
 import getRecord from "@salesforce/apex/FilterDataService.getRecord";
 
-import {Lexer} from "c/lexer";
-import {throwConfigurationError, throwRuntimeError} from "c/errorService";
+import { throwConfigurationError, throwRuntimeError } from "c/errorService";
 
+/*
 const objectName = "Account";
 const fields = [
   {
     label: "",
     name: "",
     isHidden: false,
-    default: {value: "", maxValue: {source: "context", fieldName: "XXX"}, minValue: ""},
+    default: {
+      value: "",
+      maxValue: { source: "context", fieldName: "XXX" },
+      minValue: ""
+    },
     showIndex: false,
     showObjectName: false,
     columnSize: 6
   }
 ];
+*/
 
 const DEFAULT_COLUMN_SIZE = 6;
 
@@ -82,7 +87,9 @@ export default class Filter extends InteractiveLightningElement {
   get _formData() {
     const formData = {};
     for (let input of this._inputs) {
-      const inputElement = this.template.querySelector('[data-key="' + input.key + '"]');
+      const inputElement = this.template.querySelector(
+        '[data-key="' + input.key + '"]'
+      );
       const value = inputElement.value;
       if (value) {
         formData[input.name] = value;
@@ -96,10 +103,15 @@ export default class Filter extends InteractiveLightningElement {
     objectApiName: "$_targetObjectName",
     fieldApiNames: "$_targetFieldNames"
   })
-  wiredGetInputInfos({error, data}) {
+  wiredGetInputInfos({ error, data }) {
     if (data && !data.hasError) {
       this._inputInfos = data.body;
-      this._inputs = this._buildInputs(this.fields, this._inputInfos, this._defaultValues);
+      this._inputs = this._buildInputs(
+        this.fields,
+        this._inputInfos,
+        this._defaultValues
+      );
+      this._isInputUpdated = true;
     } else if (data && data.hasError) {
       throwConfigurationError(data.errorMessage, data.errorCode);
     } else if (error) {
@@ -112,14 +124,21 @@ export default class Filter extends InteractiveLightningElement {
 
     this._targetFieldNames = this._buildTargetFieldNames(this.fields);
 
-    this._buildDefaultValues(this.recordId, this.fields).then((defaultValues) => {
-      this._defaultValues = defaultValues;
-      this._inputs = this._buildInputs(this.fields, this._inputInfos, this._defaultValues);
-    });
+    this._buildDefaultValues(this.recordId, this.fields).then(
+      (defaultValues) => {
+        this._defaultValues = defaultValues;
+        this._inputs = this._buildInputs(
+          this.fields,
+          this._inputInfos,
+          this._defaultValues
+        );
+        this._isInputUpdated = true;
+      }
+    );
     this._customLogic = this.customLogic;
 
     this.enableInteraction(this.componentId);
-    this.subscribeRecordMessage(this.sourceComponentIds, ({recordIds}) => {
+    this.subscribeRecordMessage(this.sourceComponentIds, ({ recordIds }) => {
       const params = {
         objectApiName: this._targetObjectName,
         fieldApiNames: this._targetFieldNames,
@@ -147,7 +166,12 @@ export default class Filter extends InteractiveLightningElement {
       this.search();
     });
   }
-
+  renderedCallback() {
+    if (this._isInputUpdated) {
+      this._isInputUpdated = false;
+      this.publishInitMessage();
+    }
+  }
   disconnectedCallback() {
     this.unsubscribeRecordMessage();
   }
@@ -159,7 +183,9 @@ export default class Filter extends InteractiveLightningElement {
         const field = fields[i];
         const inputInfo = inputInfos[i];
         if (!inputInfo.isFilterable) {
-          throwConfigurationError(`"${inputInfo.fieldApiName}" is not a filterable field.`);
+          throwConfigurationError(
+            `"${inputInfo.fieldApiName}" is not a filterable field.`
+          );
         }
         inputs.push({
           name: inputInfo.fieldApiName,
@@ -193,10 +219,12 @@ export default class Filter extends InteractiveLightningElement {
     const idFieldMap = {};
     for (let field of fields) {
       if (field.default) {
-        const {value, minValue, maxValue} = field.default;
+        const { value, minValue, maxValue } = field.default;
         const fieldNames = [value, minValue, maxValue]
           .filter((valueItem) => {
-            return typeof valueItem === "object" && valueItem.source === "context";
+            return (
+              typeof valueItem === "object" && valueItem.source === "context"
+            );
           })
           .map((valueItem) => {
             return valueItem.fieldName;
@@ -212,10 +240,10 @@ export default class Filter extends InteractiveLightningElement {
 
     // Get records for default values
     const resultPromises = [];
-    for (let recordId in idFieldMap) {
-      if ({}.hasOwnProperty.call(idFieldMap, recordId)) {
-        const fieldNames = idFieldMap[recordId].join(",");
-        resultPromises.push(getRecord({recordId, fieldNames}));
+    for (let recId in idFieldMap) {
+      if ({}.hasOwnProperty.call(idFieldMap, recId)) {
+        const fieldNames = idFieldMap[recId].join(",");
+        resultPromises.push(getRecord({ recId, fieldNames }));
       }
     }
 
@@ -236,7 +264,7 @@ export default class Filter extends InteractiveLightningElement {
     const defaultValues = [];
     for (let field of fields) {
       if (field.default) {
-        const {value, minValue, maxValue} = field.default;
+        const { value, minValue, maxValue } = field.default;
         const defaultValue = {};
         const contextRecord =
           records
@@ -247,17 +275,25 @@ export default class Filter extends InteractiveLightningElement {
         if (value && typeof value === "object" && value.source === "context") {
           defaultValue.value = contextRecord[value.fieldName];
         } else if (value) {
-          defaultValue.value = value;
+          defaultValue.value = value.trim();
         }
-        if (minValue && typeof minValue === "object" && minValue.source === "context") {
+        if (
+          minValue &&
+          typeof minValue === "object" &&
+          minValue.source === "context"
+        ) {
           defaultValue.minValue = contextRecord[minValue.fieldName];
         } else if (minValue) {
-          defaultValue.minValue = minValue;
+          defaultValue.minValue = minValue.trim();
         }
-        if (maxValue && typeof maxValue === "object" && maxValue.source === "context") {
+        if (
+          maxValue &&
+          typeof maxValue === "object" &&
+          maxValue.source === "context"
+        ) {
           defaultValue.maxValue = contextRecord[maxValue.fieldName];
         } else if (maxValue) {
-          defaultValue.maxValue = maxValue;
+          defaultValue.maxValue = maxValue.trim();
         }
 
         defaultValues.push(defaultValue);
@@ -265,6 +301,7 @@ export default class Filter extends InteractiveLightningElement {
         defaultValues.push(null);
       }
     }
+
     return defaultValues;
   }
 
@@ -275,7 +312,10 @@ export default class Filter extends InteractiveLightningElement {
       let token;
       for (let i = 0; i < tokens.length; i++) {
         token = tokens[i];
-        prev = reducedTokens.length > 0 ? reducedTokens[reducedTokens.length - 1] : null;
+        prev =
+          reducedTokens.length > 0
+            ? reducedTokens[reducedTokens.length - 1]
+            : null;
         if (token.kind === "NUM" && !lexemes.includes(token.lexeme)) {
           continue;
         } else if (token.kind === "LOGICALAND") {
@@ -324,8 +364,12 @@ export default class Filter extends InteractiveLightningElement {
           reducedTokens.push(token);
         }
       }
-      prev = reducedTokens.length > 0 ? reducedTokens[reducedTokens.length - 1] : null;
+      prev =
+        reducedTokens.length > 0
+          ? reducedTokens[reducedTokens.length - 1]
+          : null;
       if (prev === null) {
+        /* empty */
       } else if (prev.kind === "LOGICALAND") {
         reducedTokens.pop();
       } else if (prev.kind === "LOGICALOR") {

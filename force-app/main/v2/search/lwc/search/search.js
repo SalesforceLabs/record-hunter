@@ -1,9 +1,9 @@
-import {api, wire} from "lwc";
+import { api, wire } from "lwc";
 import InteractiveLightningElement from "c/interactiveLightningElement";
 import searchRecordIds from "@salesforce/apex/SearchDataService.searchRecordIds";
 import filterRecordIds from "@salesforce/apex/SearchDataService.filterRecordIds";
 import getFieldValueForRecord from "@salesforce/apex/SearchDataService.getFieldValueForRecord";
-import {throwConfigurationError, throwRuntimeError} from "c/errorService";
+import { throwConfigurationError, throwRuntimeError } from "c/errorService";
 
 export default class Search extends InteractiveLightningElement {
   // Reserved Public Properties
@@ -38,7 +38,7 @@ export default class Search extends InteractiveLightningElement {
     const keyword = this.template.querySelector("lightning-input").value;
     if (keyword) {
       this.showSpinner = true;
-      const params = {objectApiName: this.targetObjectApiName, keyword};
+      const params = { objectApiName: this.targetObjectApiName, keyword };
       const data = await searchRecordIds(params).catch((error) => {
         this.showSpinner = false;
         throwRuntimeError(error);
@@ -57,10 +57,15 @@ export default class Search extends InteractiveLightningElement {
   }
 
   // Wire Service Event Handlers
-  @wire(getFieldValueForRecord, {recordId: "$recordId", objectApiName: "$objectApiName", fieldApiName: "$fieldApiName"})
-  getFieldValueForRecordCallback({data, error}) {
+  @wire(getFieldValueForRecord, {
+    recordId: "$recordId",
+    objectApiName: "$objectApiName",
+    fieldApiName: "$fieldApiName"
+  })
+  getFieldValueForRecordCallback({ data, error }) {
     if (data && !data.hasError) {
       this.defaultKeyword = data.body;
+      this._isInputUpdated = true;
     } else if (data && data.hasError) {
       throwConfigurationError(data.errorMessage, data.errorCode);
     } else if (error) {
@@ -71,7 +76,7 @@ export default class Search extends InteractiveLightningElement {
   // Lifecycle Event Handlers
   connectedCallback() {
     this.enableInteraction(this.componentId);
-    this.subscribeRecordMessage(this.sourceComponentIds, ({recordIds}) => {
+    this.subscribeRecordMessage(this.sourceComponentIds, ({ recordIds }) => {
       const keyword = this.template.querySelector("lightning-input").value;
       if (keyword) {
         const params = {
@@ -105,5 +110,11 @@ export default class Search extends InteractiveLightningElement {
   disconnectedCallback() {
     this.unsubscribeRecordMessage();
     this.unsubscribeTriggerMessage();
+  }
+  renderedCallback() {
+    if (this._isInputUpdated) {
+      this._isInputUpdated = false;
+      this.publishInitMessage();
+    }
   }
 }
