@@ -127,6 +127,7 @@ export default class FilterCardClassic extends LightningElement {
       console.error(error);
       console.error(stack);
     }
+    return false;
   }
 
   onFoldButtonClicked() {
@@ -175,7 +176,10 @@ export default class FilterCardClassic extends LightningElement {
   buildDefaultValues() {
     const contextRecordFieldInfos = this.contextRecordFieldInfos;
     const defaultValuesOrFields = this.defaultValuesOrFields || "";
-    const defaultValueOrFieldList = defaultValuesOrFields.split(",");
+    const defaultValueOrFieldList = defaultValuesOrFields
+      .split(",")
+      .map((item) => item.trim());
+
     if (contextRecordFieldInfos) {
       for (let contextRecordFieldInfo of contextRecordFieldInfos) {
         defaultValueOrFieldList[contextRecordFieldInfo.index] = {
@@ -184,13 +188,37 @@ export default class FilterCardClassic extends LightningElement {
         };
       }
     }
-
     const filterFieldInfos = this.filterFieldInfos;
     const defaultValues = [];
+
     if (filterFieldInfos) {
       for (let i = 0, j = 0; i < filterFieldInfos.length; i++, j++) {
         const defaultValue = {};
         if (
+          ["DATETIME", "DATE"].includes(filterFieldInfos[i].type) &&
+          filterFieldInfos[i].isRelative
+        ) {
+          if (
+            j < defaultValueOrFieldList.length &&
+            defaultValueOrFieldList[j]
+          ) {
+            defaultValue.timeQualifier = defaultValueOrFieldList[j];
+          }
+          j++;
+          if (
+            j < defaultValueOrFieldList.length &&
+            defaultValueOrFieldList[j]
+          ) {
+            defaultValue.timeAmount = defaultValueOrFieldList[j];
+          }
+          j++;
+          if (
+            j < defaultValueOrFieldList.length &&
+            defaultValueOrFieldList[j]
+          ) {
+            defaultValue.timeUnit = defaultValueOrFieldList[j];
+          }
+        } else if (
           [
             "INTEGER",
             "PERCENT",
@@ -201,21 +229,31 @@ export default class FilterCardClassic extends LightningElement {
             "TIME"
           ].includes(filterFieldInfos[i].type)
         ) {
-          if (j < defaultValueOrFieldList.length) {
+          if (
+            j < defaultValueOrFieldList.length &&
+            defaultValueOrFieldList[j]
+          ) {
             defaultValue.minValue = defaultValueOrFieldList[j];
-            j++;
           }
-          if (j < defaultValueOrFieldList.length) {
+          j++;
+          if (
+            j < defaultValueOrFieldList.length &&
+            defaultValueOrFieldList[j]
+          ) {
             defaultValue.maxValue = defaultValueOrFieldList[j];
           }
         } else {
-          if (j < defaultValueOrFieldList.length) {
+          if (
+            j < defaultValueOrFieldList.length &&
+            defaultValueOrFieldList[j]
+          ) {
             defaultValue.value = defaultValueOrFieldList[j];
           }
         }
         defaultValues.push(defaultValue);
       }
     }
+
     return defaultValues;
   }
 

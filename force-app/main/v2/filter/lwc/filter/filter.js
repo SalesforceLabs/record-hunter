@@ -7,25 +7,6 @@ import getRecord from "@salesforce/apex/FilterDataService.getRecord";
 
 import { throwConfigurationError, throwRuntimeError } from "c/errorService";
 
-/*
-const objectName = "Account";
-const fields = [
-  {
-    label: "",
-    name: "",
-    isHidden: false,
-    default: {
-      value: "",
-      maxValue: { source: "context", fieldName: "XXX" },
-      minValue: ""
-    },
-    showIndex: false,
-    showObjectName: false,
-    columnSize: 6
-  }
-];
-*/
-
 const DEFAULT_COLUMN_SIZE = 6;
 
 export default class Filter extends InteractiveLightningElement {
@@ -146,6 +127,7 @@ export default class Filter extends InteractiveLightningElement {
         recordIds,
         customLogic: this._customLogic
       };
+
       this._showSpinner = true;
       (recordIds === null ? queryRecordIds(params) : filterRecordIds(params))
         .then((result) => {
@@ -199,10 +181,12 @@ export default class Filter extends InteractiveLightningElement {
           default: defaultValues[i],
           index: i + 1,
           showObjectName: field.showObjectName,
-          columnSize: field.columnSize || DEFAULT_COLUMN_SIZE
+          columnSize: field.columnSize || DEFAULT_COLUMN_SIZE,
+          isRelative: inputInfo.isRelative
         });
       }
     }
+
     return inputs;
   }
 
@@ -219,8 +203,22 @@ export default class Filter extends InteractiveLightningElement {
     const idFieldMap = {};
     for (let field of fields) {
       if (field.default) {
-        const { value, minValue, maxValue } = field.default;
-        const fieldNames = [value, minValue, maxValue]
+        const {
+          value,
+          minValue,
+          maxValue,
+          timeQualifier,
+          timeAmount,
+          timeUnit
+        } = field.default;
+        const fieldNames = [
+          value,
+          minValue,
+          maxValue,
+          timeQualifier,
+          timeAmount,
+          timeUnit
+        ]
           .filter((valueItem) => {
             return (
               typeof valueItem === "object" && valueItem.source === "context"
@@ -243,13 +241,16 @@ export default class Filter extends InteractiveLightningElement {
     for (let recId in idFieldMap) {
       if ({}.hasOwnProperty.call(idFieldMap, recId)) {
         const fieldNames = idFieldMap[recId].join(",");
-        resultPromises.push(getRecord({ recId, fieldNames }));
+        resultPromises.push(getRecord({ recordId: recId, fieldNames }));
       }
     }
 
-    const results = await Promise.all(resultPromises).catch((error) => {
+    let results = [];
+    try {
+      results = await Promise.all(resultPromises);
+    } catch (error) {
       throwConfigurationError(error);
-    });
+    }
 
     const records = [];
     for (let result of results) {
@@ -264,7 +265,14 @@ export default class Filter extends InteractiveLightningElement {
     const defaultValues = [];
     for (let field of fields) {
       if (field.default) {
-        const { value, minValue, maxValue } = field.default;
+        const {
+          value,
+          minValue,
+          maxValue,
+          timeQualifier,
+          timeAmount,
+          timeUnit
+        } = field.default;
         const defaultValue = {};
         const contextRecord =
           records
@@ -294,6 +302,33 @@ export default class Filter extends InteractiveLightningElement {
           defaultValue.maxValue = contextRecord[maxValue.fieldName];
         } else if (maxValue) {
           defaultValue.maxValue = maxValue.trim();
+        }
+        if (
+          timeQualifier &&
+          typeof timeQualifier === "object" &&
+          timeQualifier.source === "context"
+        ) {
+          defaultValue.timeQualifier = contextRecord[timeQualifier.fieldName];
+        } else if (timeQualifier) {
+          defaultValue.timeQualifier = timeQualifier.trim();
+        }
+        if (
+          timeAmount &&
+          typeof timeAmount === "object" &&
+          timeAmount.source === "context"
+        ) {
+          defaultValue.timeAmount = contextRecord[timeAmount.fieldName];
+        } else if (timeAmount) {
+          defaultValue.timeAmount = timeAmount.trim();
+        }
+        if (
+          timeUnit &&
+          typeof timeUnit === "object" &&
+          timeUnit.source === "context"
+        ) {
+          defaultValue.timeUnit = contextRecord[timeUnit.fieldName];
+        } else if (timeUnit) {
+          defaultValue.timeUnit = timeUnit.trim();
         }
 
         defaultValues.push(defaultValue);

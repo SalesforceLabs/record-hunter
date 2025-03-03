@@ -1,68 +1,54 @@
 <template>
-    <template if:false={hasConfigurationError}>
-        <article class="slds-card">
-            <div class="slds-card__header slds-grid">
-                <header class="slds-media slds-media_center slds-has-flexi-truncate">
-                    <div class="slds-media__figure">
-                        <template if:true={isCardFoldable}>
-                            <lightning-button-icon icon-name={iconName} variant="border-filled" size="small"
-                                alternative-text="Open" title="Open" onclick={onFoldButtonClicked}>
-                            </lightning-button-icon>
-                        </template>
-                        <template if:false={isCardFoldable}>
-                            <lightning-icon icon-name={cardIconName} alternative-text="icon" title="icon" size="small">
-                            </lightning-icon>
-                        </template>
-                    </div>
-                    <div class="slds-media__body">
-                        <h2 class="slds-card__header-title">
-                            {cardTitle}
-                        </h2>
-                    </div>
-                </header>
-            </div>
-            <div class={cardBodyClass}>
-                <template if:true={hasRuntimeError}>
-                    <c-alert message={errorMessage} onclose={onAlertClosed}></c-alert>
-                </template>
-                <template if:true={fields}>
-                    <c-filter object-name={targetObjectApiName} fields={fields} component-id={componentId}
-                        source-component-ids={sourceComponentIds} custom-logic={customLogic} record-id={recordId}>
-                    </c-filter>
-                </template>
-            </div>
-        </article>
-
-
-
-
-
-
-
-
-        <!---
-        <lightning-card title={cardTitle} icon-name={cardIconName}>
-
-            <template for:each={sections} for:item="section" for:index="index">
-                <div key={section.name}>
-                    <div class="slds-text-heading_small slds-m-horizontal_small slds-m-bottom_small slds-m-top_medium">
-                        {section.label}</div>
-                    <c-filter object-name={targetObjectApiName} fields={section.fields} component-id={componentId}
-                        source-component-ids={sourceComponentIds} custom-logic={customLogic} record-id={recordId}>
-                    </c-filter>
-                </div>
+  <template if:false={hasConfigurationError}>
+    <article class="slds-card">
+      <div class="slds-card__header slds-grid">
+        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <template if:true={isCardFoldable}>
+              <lightning-button-icon
+                icon-name={iconName}
+                variant="border-filled"
+                size="small"
+                alternative-text="Open"
+                title="Open"
+                onclick={onFoldButtonClicked}
+              >
+              </lightning-button-icon>
             </template>
-            <template if:true={showSearchButton}>
-                <div slot="footer">
-                    <lightning-button variant="brand" label={searchButtonLabel} onclick={onSearchButtonClicked}>
-                    </lightning-button>
-                </div>
+            <template if:false={isCardFoldable}>
+              <lightning-icon
+                icon-name={cardIconName}
+                alternative-text="icon"
+                title="icon"
+                size="small"
+              >
+              </lightning-icon>
             </template>
-        </lightning-card>
-    -->
-    </template>
-    <template if:true={hasConfigurationError}>
-        <c-error-card title={errorTitle} message={errorMessage}></c-error-card>
-    </template>
-
+          </div>
+          <div class="slds-media__body">
+            <h2 class="slds-card__header-title">{cardTitle}</h2>
+          </div>
+        </header>
+      </div>
+      <div class={cardBodyClass}>
+        <template if:true={hasRuntimeError}>
+          <c-alert message={errorMessage} onclose={onAlertClosed}></c-alert>
+        </template>
+        <template if:true={fields}>
+          <c-filter
+            object-name={targetObjectApiName}
+            fields={fields}
+            component-id={componentId}
+            source-component-ids={sourceComponentIds}
+            custom-logic={customLogic}
+            record-id={recordId}
+          >
+          </c-filter>
+        </template>
+      </div>
+    </article>
+  </template>
+  <template if:true={hasConfigurationError}>
+    <c-error-card title={errorTitle} message={errorMessage}></c-error-card>
+  </template>
 </template>

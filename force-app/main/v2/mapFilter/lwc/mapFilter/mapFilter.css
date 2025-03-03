@@ -1,0 +1,20 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.container {
+  position: relative;
+  height: 100%;
+}
+
+.container .form {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+lightning-map {
+  height: 100%;
+  width: 100%;
+}

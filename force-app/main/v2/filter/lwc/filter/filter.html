@@ -1,17 +1,30 @@
 <template>
   <lightning-layout multiple-rows>
     <template for:each={_inputs} for:item="input">
-      <lightning-layout-item key={input.key} padding="horizontal-small" size={input.columnSize}
-        class="slds-m-bottom_x-small">
-        <c-input type={input.type} label={input.label} step={input.step} is-hidden={input.isHidden}
-          default-value={input.default} options={input.options} data-key={input.key} show-index={input.showIndex}
-          field-index={input.index} object-name={input.objectName} show-object-name={input.showObjectName}></c-input>
+      <lightning-layout-item
+        key={input.key}
+        padding="horizontal-small"
+        size={input.columnSize}
+        class="slds-m-bottom_x-small"
+      >
+        <c-input
+          type={input.type}
+          label={input.label}
+          step={input.step}
+          is-hidden={input.isHidden}
+          default-value={input.default}
+          options={input.options}
+          data-key={input.key}
+          show-index={input.showIndex}
+          field-index={input.index}
+          object-name={input.objectName}
+          show-object-name={input.showObjectName}
+          is-relative={input.isRelative}
+        ></c-input>
       </lightning-layout-item>
     </template>
   </lightning-layout>
   <template if:true={_showSpinner}>
-    <lightning-spinner alternative-text="Loading...">
-    </lightning-spinner>
+    <lightning-spinner alternative-text="Loading..."> </lightning-spinner>
   </template>
-
 </template>

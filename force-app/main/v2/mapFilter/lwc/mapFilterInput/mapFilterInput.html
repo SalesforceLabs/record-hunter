@@ -1,0 +1,93 @@
+<template>
+  <lightning-layout multiple-rows pull-to-boundary="small">
+    <lightning-layout-item
+      size="12"
+      medium-device-size="6"
+      padding="horizontal-small"
+    >
+      <template lwc:if={isLatlngInputMode}>
+        <lightning-layout>
+          <lightning-layout-item size="6">
+            <lightning-input
+              name="latitude"
+              type="number"
+              step="0.000000001"
+              max="90"
+              min="-90"
+              label="Latitude"
+              onblur={onInputBlurred}
+              onchange={onValueChanged}
+              value={value.location.latitude}
+              class="slds-m-right_xx-small"
+            ></lightning-input>
+          </lightning-layout-item>
+          <lightning-layout-item size="6">
+            <lightning-input
+              name="longitude"
+              type="number"
+              step="0.000000001"
+              max="180"
+              min="-180"
+              label="Longitude"
+              onblur={onInputBlurred}
+              onchange={onValueChanged}
+              value={value.location.longitude}
+              class="slds-m-left_xx-small"
+            ></lightning-input>
+          </lightning-layout-item>
+        </lightning-layout>
+      </template>
+
+      <template lwc:if={isAddressInputMode}>
+        <lightning-input
+          name="address"
+          label="Address"
+          onblur={onInputBlurred}
+          onchange={onValueChanged}
+          value={value.location.address}
+        ></lightning-input>
+      </template>
+    </lightning-layout-item>
+    <lightning-layout-item
+      size="12"
+      medium-device-size="6"
+      padding="horizontal-small"
+    >
+      <div class="slds-clearfix">
+        <div class="slds-float_left" style="width: 50%">
+          <lightning-input
+            class="distance"
+            name="distance"
+            type="number"
+            step="0.01"
+            min="0"
+            label="Distance"
+            onblur={onInputBlurred}
+            onchange={onValueChanged}
+            value={value.distance}
+          ></lightning-input>
+        </div>
+        <div class="slds-float_left" style="width: 50%">
+          <label class="slds-form-element__label" style="height: 18px"> </label>
+          <select
+            class="slds-select"
+            name="unit"
+            onblur={onInputBlurred}
+            onchange={onValueChanged}
+          >
+            <template for:each={unitOptions} for:item="option">
+              <option
+                key={option.value}
+                value={option.value}
+                selected={option.isSelected}
+              >
+                {option.label}
+              </option>
+            </template>
+          </select>
+          <div class="slds-form-element__help"></div>
+        </div>
+      </div>
+    </lightning-layout-item>
+  </lightning-layout>
+</template>

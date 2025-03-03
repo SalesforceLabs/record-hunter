@@ -73,6 +73,7 @@ public with sharing class SchemaDataService extends DataService {
           fieldInfo.put('type', dfr.getType().name());
           fieldInfo.put('path', result.fieldPath);
           fieldInfo.put('index', i);
+          fieldInfo.put('isRelative', result.isRelative);
           fieldInfos.add(fieldInfo);
         }
         i++;

@@ -18,6 +18,8 @@ public with sharing class FilterDataService extends DataService {
     public Integer index;
     @AuraEnabled
     public Boolean isFilterable;
+    @AuraEnabled
+    public Boolean isRelative;
   }
   public class SelectOption {
     @AuraEnabled
@@ -126,6 +128,9 @@ public with sharing class FilterDataService extends DataService {
     if (String.isNotBlank(conditions)) {
       query += ' WHERE ' + conditions;
     }
+
+    System.debug(query);
+
     List<Id> recordIds = performQuery(query);
 
     return new Result(recordIds);
@@ -193,6 +198,7 @@ public with sharing class FilterDataService extends DataService {
     inputInfo.name = fieldInfo.queriableFieldApiName;
     inputInfo.fieldApiName = fieldInfo.fieldPath;
     inputInfo.index = index;
+    inputInfo.isRelative = fieldInfo.isRelative;
 
     Schema.DescribeSObjectResult dsor = fieldInfo.describeSObjectResult;
     inputInfo.objectInfo = (new ObjectInfo(dsor.getName(), dsor.getLabel()));
@@ -332,7 +338,7 @@ public with sharing class FilterDataService extends DataService {
             (maxValue.contains('.') ? maxValue : maxValue + '.0');
         }
       }
-      when 'INTEGER', 'DATE' {
+      when 'INTEGER' {
         whereCondition = String.isNotBlank(minValue)
           ? fieldName + ' >= ' + minValue
           : '';
@@ -343,6 +349,22 @@ public with sharing class FilterDataService extends DataService {
         whereCondition += String.isNotBlank(maxValue)
           ? fieldName + ' <= ' + maxValue
           : '';
+      }
+      when 'DATE' {
+        if (String.isNotBlank(value)) {
+          whereCondition = fieldName + ' = ' + value;
+        } else {
+          whereCondition = String.isNotBlank(minValue)
+            ? fieldName + ' >= ' + minValue
+            : '';
+          whereCondition += String.isNotBlank(minValue) &&
+            String.isNotBlank(maxValue)
+            ? ' AND '
+            : '';
+          whereCondition += String.isNotBlank(maxValue)
+            ? fieldName + ' <= ' + maxValue
+            : '';
+        }
       }
       when 'TIME' {
         whereCondition = String.isNotBlank(minValue)
@@ -389,36 +411,40 @@ public with sharing class FilterDataService extends DataService {
         }
       }
       when 'DATETIME' {
-        whereCondition = String.isNotBlank(minValue)
-          ? fieldName + ' >= ' + minValue
-          : '';
-        whereCondition += String.isNotBlank(minValue) &&
-          String.isNotBlank(maxValue)
-          ? ' AND '
-          : '';
-        if (String.isNotBlank(maxValue)) {
-          Datetime dt = (Datetime) JSON.deserialize(
-            '"' + maxValue + '"',
-            Datetime.class
-          );
-          if (dt.millisecond() == 0 && dt.second() == 0) {
-            whereCondition +=
-              fieldName +
-              ' <= ' +
-              dt.formatGMT('yyyy-MM-dd\'T\'HH:mm') +
-              ':59.999Z';
-          } else if (dt.millisecond() == 0) {
-            whereCondition +=
-              fieldName +
-              ' <= ' +
-              dt.formatGMT('yyyy-MM-dd\'T\'HH:mm:ss') +
-              '.999Z';
-          } else {
-            whereCondition +=
-              fieldName +
-              ' <= ' +
-              dt.formatGMT('yyyy-MM-dd\'T\'HH:mm:ss.SSS') +
-              'Z';
+        if (String.isNotBlank(value)) {
+          whereCondition = fieldName + ' = ' + value;
+        } else {
+          whereCondition = String.isNotBlank(minValue)
+            ? fieldName + ' >= ' + minValue
+            : '';
+          whereCondition += String.isNotBlank(minValue) &&
+            String.isNotBlank(maxValue)
+            ? ' AND '
+            : '';
+          if (String.isNotBlank(maxValue)) {
+            Datetime dt = (Datetime) JSON.deserialize(
+              '"' + maxValue + '"',
+              Datetime.class
+            );
+            if (dt.millisecond() == 0 && dt.second() == 0) {
+              whereCondition +=
+                fieldName +
+                ' <= ' +
+                dt.formatGMT('yyyy-MM-dd\'T\'HH:mm') +
+                ':59.999Z';
+            } else if (dt.millisecond() == 0) {
+              whereCondition +=
+                fieldName +
+                ' <= ' +
+                dt.formatGMT('yyyy-MM-dd\'T\'HH:mm:ss') +
+                '.999Z';
+            } else {
+              whereCondition +=
+                fieldName +
+                ' <= ' +
+                dt.formatGMT('yyyy-MM-dd\'T\'HH:mm:ss.SSS') +
+                'Z';
+            }
           }
         }
       }
