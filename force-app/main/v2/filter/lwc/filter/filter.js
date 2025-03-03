@@ -113,7 +113,6 @@ export default class Filter extends InteractiveLightningElement {
           this._inputInfos,
           this._defaultValues
         );
-
         this._isInputUpdated = true;
       }
     );
@@ -337,6 +336,7 @@ export default class Filter extends InteractiveLightningElement {
         defaultValues.push(null);
       }
     }
+
     return defaultValues;
   }
 
