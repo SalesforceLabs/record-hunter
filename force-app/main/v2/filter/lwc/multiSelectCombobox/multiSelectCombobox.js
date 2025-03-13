@@ -1,4 +1,4 @@
-import {LightningElement, api} from "lwc";
+import { LightningElement, api } from "lwc";
 
 export default class MultiSelectCombobox extends LightningElement {
   @api label;
@@ -10,7 +10,11 @@ export default class MultiSelectCombobox extends LightningElement {
   showDialog = false;
 
   get comboboxClass() {
-    const classList = ["slds-combobox", "slds-dropdown-trigger", "slds-dropdown-trigger_click"];
+    const classList = [
+      "slds-combobox",
+      "slds-dropdown-trigger",
+      "slds-dropdown-trigger_click"
+    ];
     if (this.showDialog) {
       classList.push("slds-is-open");
     }
@@ -24,7 +28,9 @@ export default class MultiSelectCombobox extends LightningElement {
     return classList.join(" ");
   }
   get buttonClass() {
-    const classList = ["slds-input slds-combobox__input  slds-text-align_left"];
+    const classList = [
+      "slds-combobox__input slds-input_faux fix-slds-input_faux"
+    ];
     if (this.showDialog) {
       classList.push("slds-has-focus");
     }
@@ -64,6 +70,7 @@ export default class MultiSelectCombobox extends LightningElement {
   }
   onDoneClicked(e) {
     e.stopPropagation();
+    // eslint-disable-next-line @lwc/lwc/no-api-reassignments
     this.values = this.draftValues;
     this.showDialog = false;
   }

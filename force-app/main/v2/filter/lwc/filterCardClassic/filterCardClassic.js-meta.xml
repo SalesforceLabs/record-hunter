@@ -47,7 +47,7 @@
         name="numberOfColumns"
         label="Number of Columns"
         datasource="1,2,3,4,6"
-        default="2"
+        default="1"
       />
       <property
         type="Boolean"

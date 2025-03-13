@@ -52,19 +52,24 @@ export default class InteractiveLightningElement extends LightningElement {
     this.recordHunterRecordMessageSubscription = null;
   }
   publishRecordMessage(recordIds) {
+    console.log("publishRecordMessage:start");
     publish(this.messageContext, recordHunterRecordMessageChannel, {
       recordIds,
       sourceComponentId: this.componentId,
       rootComponentId: this.rootComponentId
     });
+    console.log("publishRecordMessage:done");
   }
 
   subscribeTriggerMessage(callback) {
+    console.log(this.componentId, "subscribeTriggerMessage:start");
     if (!this.recordHunterTriggerMessageSubscription) {
+      console.log(this.componentId, "subscribeTriggerMessage:subscribe");
       this.recordHunterTriggerMessageSubscription = subscribe(
         this.messageContext,
         recordHunterTriggerMessageChannel,
         (payload) => {
+          console.log("subscribeTriggerMessage:callback");
           const sourceComponentId = payload.sourceComponentId;
           const targetComponentId = payload.targetComponentId;
           if (
