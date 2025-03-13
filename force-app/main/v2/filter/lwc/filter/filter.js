@@ -1,18 +1,19 @@
-import { api, wire } from "lwc";
-import InteractiveLightningElement from "c/interactiveLightningElement";
+import { LightningElement, api, wire } from "lwc";
 import getInputInfos from "@salesforce/apex/FilterDataService.getInputInfos";
 import filterRecordIds from "@salesforce/apex/FilterDataService.filterRecordIds";
 import queryRecordIds from "@salesforce/apex/FilterDataService.queryRecordIds";
 import getRecord from "@salesforce/apex/FilterDataService.getRecord";
 
+import MessageService from "c/messageService";
 import { throwConfigurationError, throwRuntimeError } from "c/errorService";
 
 const DEFAULT_COLUMN_SIZE = 6;
 
-export default class Filter extends InteractiveLightningElement {
+export default class Filter extends LightningElement {
   @api objectName;
   @api componentId;
   @api sourceComponentIds;
+  @api targetComponentIds;
   @api recordId;
   @api get fields() {
     return this._fields;
@@ -48,7 +49,9 @@ export default class Filter extends InteractiveLightningElement {
     queryRecordIds(params)
       .then((result) => {
         if (result && !result.hasError) {
-          this.publishRecordMessage(result.body.join(","));
+          this.messageService.publishStatusChangedToCompletedWithResult({
+            recordIds: result.body.join(",")
+          });
           this._showSpinner = false;
         } else if (result && result.hasError) {
           this._showSpinner = false;
@@ -101,6 +104,43 @@ export default class Filter extends InteractiveLightningElement {
   }
 
   connectedCallback() {
+    this.messageService = new MessageService(this, this.targetComponentIds);
+    this.messageService.subscribeStatusChangedToCompleted(() => {
+      this.search();
+    });
+    this.messageService.subscribeStatusChangedToCompletedWithResult(
+      ({ result }) => {
+        const params = {
+          objectApiName: this._targetObjectName,
+          fieldApiNames: this._targetFieldNames,
+          formDataJson: JSON.stringify(this._formData),
+          recordIds: result.recordIds,
+          customLogic: this._customLogic
+        };
+
+        this._showSpinner = true;
+        (result.recordIds === null
+          ? queryRecordIds(params)
+          : filterRecordIds(params)
+        )
+          .then((response) => {
+            if (response && !response.hasError) {
+              this.messageService.publishStatusChangedToCompletedWithResult({
+                recordIds: response.body.join(",")
+              });
+              this._showSpinner = false;
+            } else if (response && response.hasError) {
+              this._showSpinner = false;
+              throwRuntimeError(response.errorMessage, response.errorCode);
+            }
+          })
+          .catch((error) => {
+            this._showSpinner = false;
+            throwRuntimeError(error);
+          });
+      }
+    );
+
     this._targetObjectName = this.objectName;
 
     this._targetFieldNames = this._buildTargetFieldNames(this.fields);
@@ -117,45 +157,15 @@ export default class Filter extends InteractiveLightningElement {
       }
     );
     this._customLogic = this.customLogic;
-
-    this.enableInteraction(this.componentId);
-    this.subscribeRecordMessage(this.sourceComponentIds, ({ recordIds }) => {
-      const params = {
-        objectApiName: this._targetObjectName,
-        fieldApiNames: this._targetFieldNames,
-        formDataJson: JSON.stringify(this._formData),
-        recordIds,
-        customLogic: this._customLogic
-      };
-
-      this._showSpinner = true;
-      (recordIds === null ? queryRecordIds(params) : filterRecordIds(params))
-        .then((result) => {
-          if (result && !result.hasError) {
-            this.publishRecordMessage(result.body.join(","));
-            this._showSpinner = false;
-          } else if (result && result.hasError) {
-            this._showSpinner = false;
-            throwRuntimeError(result.errorMessage, result.errorCode);
-          }
-        })
-        .catch((error) => {
-          this._showSpinner = false;
-          throwRuntimeError(error);
-        });
-    });
-    this.subscribeTriggerMessage(() => {
-      this.search();
-    });
   }
   renderedCallback() {
     if (this._isInputUpdated) {
       this._isInputUpdated = false;
-      this.publishInitMessage();
+      this.messageService.publishStatusChangedToReady();
     }
   }
   disconnectedCallback() {
-    this.unsubscribeRecordMessage();
+    this.messageService.unsubscribeAll();
   }
 
   _buildInputs(fields, inputInfos, defaultValues) {

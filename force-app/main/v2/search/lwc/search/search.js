@@ -1,11 +1,12 @@
-import { api, wire } from "lwc";
-import InteractiveLightningElement from "c/interactiveLightningElement";
+import { LightningElement, api, wire } from "lwc";
 import searchRecordIds from "@salesforce/apex/SearchDataService.searchRecordIds";
 import filterRecordIds from "@salesforce/apex/SearchDataService.filterRecordIds";
 import getFieldValueForRecord from "@salesforce/apex/SearchDataService.getFieldValueForRecord";
 import { throwConfigurationError, throwRuntimeError } from "c/errorService";
 
-export default class Search extends InteractiveLightningElement {
+import MessageService from "c/messageService";
+
+export default class Search extends LightningElement {
   // Reserved Public Properties
   @api recordId;
   @api objectApiName;
@@ -14,6 +15,7 @@ export default class Search extends InteractiveLightningElement {
   @api targetObjectApiName;
   @api componentId;
   @api sourceComponentIds;
+  @api targetComponentIds;
   @api get defaultValue() {
     return this._defaultValue;
   }
@@ -45,14 +47,18 @@ export default class Search extends InteractiveLightningElement {
       });
 
       if (data && !data.hasError) {
-        this.publishRecordMessage(data.body.join(","));
+        this.messageService.publishStatusChangedToCompletedWithResult({
+          recordIds: data.body.join(",")
+        });
         this.showSpinner = false;
       } else if (data && data.hasError) {
         this.showSpinner = false;
         throwRuntimeError(data.errorMessage, data.errorCode);
       }
     } else {
-      this.publishRecordMessage(null);
+      this.messageService.publishStatusChangedToCompletedWithResult({
+        recordIds: null
+      });
     }
   }
 
@@ -75,46 +81,55 @@ export default class Search extends InteractiveLightningElement {
 
   // Lifecycle Event Handlers
   connectedCallback() {
-    this.enableInteraction(this.componentId);
-    this.subscribeRecordMessage(this.sourceComponentIds, ({ recordIds }) => {
-      const keyword = this.template.querySelector("lightning-input").value;
-      if (keyword) {
-        const params = {
-          objectApiName: this.targetObjectApiName,
-          keyword,
-          recordIds
-        };
-        this.showSpinner = true;
-        (recordIds === null ? searchRecordIds(params) : filterRecordIds(params))
-          .then((result) => {
-            if (result && !result.hasError) {
-              this.publishRecordMessage(result.body.join(","));
-              this.showSpinner = false;
-            } else if (result && result.hasError) {
-              this.showSpinner = false;
-              throwRuntimeError(result.errorMessage, result.errorCode);
-            }
-          })
-          .catch((error) => {
-            this.showSpinner = false;
-            throwRuntimeError(error);
-          });
-      } else {
-        this.publishRecordMessage(recordIds);
-      }
-    });
-    this.subscribeTriggerMessage(() => {
+    this.messageService = new MessageService(this, this.targetComponentIds);
+    this.messageService.subscribeStatusChangedToCompleted(() => {
       this.search();
     });
+    this.messageService.subscribeStatusChangedToCompletedWithResult(
+      ({ result }) => {
+        const keyword = this.template.querySelector("lightning-input").value;
+        if (keyword) {
+          const params = {
+            objectApiName: this.targetObjectApiName,
+            keyword,
+            recordIds: result.recordIds
+          };
+          this.showSpinner = true;
+          (result.recordIds === null
+            ? searchRecordIds(params)
+            : filterRecordIds(params)
+          )
+            .then((response) => {
+              if (response && !response.hasError) {
+                this.messageService.publishStatusChangedToCompletedWithResult({
+                  recordIds: response.body.join(",")
+                });
+                this.showSpinner = false;
+              } else if (response && response.hasError) {
+                this.showSpinner = false;
+                throwRuntimeError(response.errorMessage, response.errorCode);
+              }
+            })
+            .catch((error) => {
+              this.showSpinner = false;
+              throwRuntimeError(error);
+            });
+        } else {
+          this.messageService.publishStatusChangedToCompletedWithResult({
+            recordIds: null
+          });
+        }
+      }
+    );
   }
   disconnectedCallback() {
-    this.unsubscribeRecordMessage();
-    this.unsubscribeTriggerMessage();
+    this.messageService.unsubscribeAll();
   }
   renderedCallback() {
-    if (this._isInputUpdated) {
+    if (this._isInputUpdated || (!this.recordId && !this.isRendered)) {
+      this.isRendered = true;
       this._isInputUpdated = false;
-      this.publishInitMessage();
+      this.messageService.publishStatusChangedToReady();
     }
   }
 }

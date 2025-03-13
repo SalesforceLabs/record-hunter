@@ -25,6 +25,7 @@ export default class FilterCardClassic extends LightningElement {
   // Private Properties
   componentId;
   sourceComponentIds;
+  targetComponentIds;
   config;
   targetObjectName;
   hasConfigurationError;
@@ -99,6 +100,7 @@ export default class FilterCardClassic extends LightningElement {
     this.componentId = this.order;
     this.sourceComponentIds =
       parseInt(this.order, 10) - 1 > 0 ? parseInt(this.order, 10) - 1 + "" : "";
+    this.targetComponentIds = parseInt(this.order, 10) + 1 + "";
 
     const numOfCols = parseInt(this.numberOfColumns, 10);
     this.columnSize = 0 < numOfCols && numOfCols <= 12 ? 12 / numOfCols : 6;

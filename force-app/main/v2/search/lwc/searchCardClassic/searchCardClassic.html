@@ -1,19 +1,28 @@
 <template>
-    <template if:false={hasConfigurationError}>
-        <lightning-card title={cardTitle} icon-name={cardIconName}>
-            <template if:true={hasRuntimeError}>
-                <c-alert message={errorMessage} onclose={onAlertClosed}></c-alert>
-            </template>
-            <lightning-layout multiple-rows="false">
-                <lightning-layout-item flexibility="auto,grow" padding="horizontal-small">
-                    <c-search target-object-api-name={targetObjectApiName} component-id={componentId}
-                        source-component-ids={sourceComponentIds} default-value={defaultValue} record-id={recordId}
-                        object-api-name={objectApiName}></c-search>
-                </lightning-layout-item>
-            </lightning-layout>
-        </lightning-card>
-    </template>
-    <template if:true={hasConfigurationError}>
-        <c-error-card title={errorTitle} message={errorMessage}></c-error-card>
-    </template>
+  <template if:false={hasConfigurationError}>
+    <lightning-card title={cardTitle} icon-name={cardIconName}>
+      <template if:true={hasRuntimeError}>
+        <c-alert message={errorMessage} onclose={onAlertClosed}></c-alert>
+      </template>
+      <lightning-layout multiple-rows="false">
+        <lightning-layout-item
+          flexibility="auto,grow"
+          padding="horizontal-small"
+        >
+          <c-search
+            target-object-api-name={targetObjectApiName}
+            component-id={componentId}
+            source-component-ids={sourceComponentIds}
+            target-component-ids={targetComponentIds}
+            default-value={defaultValue}
+            record-id={recordId}
+            object-api-name={objectApiName}
+          ></c-search>
+        </lightning-layout-item>
+      </lightning-layout>
+    </lightning-card>
+  </template>
+  <template if:true={hasConfigurationError}>
+    <c-error-card title={errorTitle} message={errorMessage}></c-error-card>
+  </template>
 </template>

@@ -1,13 +1,15 @@
-import { api } from "lwc";
-import InteractiveLightningElement from "c/interactiveLightningElement";
+import { LightningElement, api } from "lwc";
+import MessageService from "c/messageService";
 
-export default class ActionButtons extends InteractiveLightningElement {
+export default class ActionButtons extends LightningElement {
   @api componentId = "ACTION_BUTTONS";
   @api sourceComponentIds = "";
   @api targetComponentId = "0";
   @api alignment = "CENTER";
   @api searchButtonLabel = "Search";
   @api isSearchOnLoadEnabled = false;
+
+  targetComponentIds;
 
   get sldsBoxClass() {
     const classList = ["slds-box  slds-box_small slds-theme_default"];
@@ -33,24 +35,19 @@ export default class ActionButtons extends InteractiveLightningElement {
   }
 
   connectedCallback() {
-    this.enableInteraction(this.componentId);
-    if (this.isSearchOnLoadEnabled) {
-      this.subscribeInitMessage(() => {
-        this.publishTriggerMessage(this.targetComponentId);
-      });
-    }
+    this.targetComponentIds = this.targetComponentId;
+    this.messageService = new MessageService(this, this.targetComponentIds);
+    this.messageService.subscribeStatusChangedToReady(() => {
+      if (this.isSearchOnLoadEnabled) {
+        this.messageService.publishStatusChangedToCompleted();
+      }
+    });
   }
 
   disconnectedCallback() {
-    this.unsubscribeInitMessage();
-  }
-  renderedCallback() {
-    if (!this.isRendered) {
-      this.isRendered = true;
-      this.publishInitMessage();
-    }
+    this.messageService.unsubscribeStatusChangedToReady();
   }
   onSearchClicked() {
-    this.publishTriggerMessage(this.targetComponentId);
+    this.messageService.publishStatusChangedToCompleted();
   }
 }

@@ -1,4 +1,4 @@
-import {LightningElement, api} from "lwc";
+import { LightningElement, api } from "lwc";
 import ScreenFlowModal from "c/screenFlowModal";
 
 export default class ListCardClassic extends LightningElement {
@@ -21,6 +21,7 @@ export default class ListCardClassic extends LightningElement {
   // Private Properties
   componentId;
   sourceComponentIds;
+  targetComponentIds;
   selectedRows = [];
   actions = [];
   totalNumberOfRecords = 0;
@@ -41,13 +42,17 @@ export default class ListCardClassic extends LightningElement {
 
   connectedCallback() {
     this.componentId = this.order;
-    this.sourceComponentIds = parseInt(this.order) - 1 + "";
+    this.sourceComponentIds = parseInt(this.order, 10) - 1;
+    this.targetComponentIds = parseInt(this.order, 10) + 1;
     const actions = [];
     const flowNameList = this.flowNames ? this.flowNames.split(",") : [];
     const flowLabelList = this.flowLabels ? this.flowLabels.split(",") : [];
     for (let i = 0; i < flowNameList.length; i++) {
       const name = flowNameList[i].trim();
-      const label = i < flowLabelList.length ? flowLabelList[i].trim() : flowNameList[i].trim();
+      const label =
+        i < flowLabelList.length
+          ? flowLabelList[i].trim()
+          : flowNameList[i].trim();
       const action = {
         type: "flow",
         name,
@@ -83,7 +88,7 @@ export default class ListCardClassic extends LightningElement {
   }
 
   onActionButtonClicked(e) {
-    const {type, name, label} = e.detail;
+    const { type, name, label } = e.detail;
     if (type === "flow") {
       const selectedRecordIds = this.selectedRows.map((record) => {
         return record.Id;
@@ -95,7 +100,7 @@ export default class ListCardClassic extends LightningElement {
         selectedRecordIds: selectedRecordIds,
         contextRecordId: this.recordId
       })
-        .then((result) => {
+        .then(() => {
           this.template.querySelector("c-list").reload();
         })
         .catch((error) => {
