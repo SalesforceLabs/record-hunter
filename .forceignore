@@ -10,6 +10,9 @@ package.xml
 
 # LWC Jest
 **/__tests__/**
+**/tsconfig.json
+
+**/*.ts
 
 # Ignore v1
 force-app/main/v1/**
