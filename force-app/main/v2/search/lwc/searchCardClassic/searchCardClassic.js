@@ -18,6 +18,7 @@ export default class SearchCardClassic extends LightningElement {
   // Private Properties
   componentId;
   sourceComponentIds;
+  targetComponentIds;
   hasConfigurationError;
   hasRuntimeError;
   defaultValue;
@@ -64,8 +65,7 @@ export default class SearchCardClassic extends LightningElement {
   // Lifecycle Event Handlers
   connectedCallback() {
     this.componentId = this.order;
-    this.sourceComponentIds =
-      parseInt(this.order, 10) - 1 > 0 ? parseInt(this.order, 10) - 1 + "" : "";
+    this.targetComponentIds = parseInt(this.order, 10) + 1 + "";
     if (!this.objectApiName) {
       this.defaultValue = this.defaultValuesOrFieldNames;
     }

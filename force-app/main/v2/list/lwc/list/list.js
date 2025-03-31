@@ -1,10 +1,13 @@
-import { api, wire } from "lwc";
-import InteractiveLightningElement from "c/interactiveLightningElement";
+import { LightningElement, api, wire } from "lwc";
+
 import getColumnInfos from "@salesforce/apex/ListDataService.getColumnInfos";
 import queryRecordsByIds from "@salesforce/apex/ListDataService.queryRecordsByIds";
 import { getColumnTypeAttributes, getColumnType, getRows } from "./listUtils";
 import { throwConfigurationError, throwRuntimeError } from "c/errorService";
-export default class List extends InteractiveLightningElement {
+
+import MessageService from "c/messageService";
+
+export default class List extends LightningElement {
   /*
    *  Public Properties
    */
@@ -12,6 +15,7 @@ export default class List extends InteractiveLightningElement {
   @api fieldApiNames;
   @api componentId = "LIST_CMP";
   @api sourceComponentIds = "SEARCH_CMP,FILTER_CMP";
+  @api targetComponentIds = "0";
   @api sortBy = "Id";
   @api sortDirection = "asc";
   @api tableHeight = 500;
@@ -24,9 +28,8 @@ export default class List extends InteractiveLightningElement {
     this.setAttribute("pageSize", this._pageSize);
   }
   @api reload() {
-    this.publishTriggerMessage(this.rootComponentId);
-    //this.pageIndex = 0;
-    //this.loadData();
+    this.pageIndex = 0;
+    this.loadData();
   }
   /*
    *  Private Properties
@@ -80,8 +83,7 @@ export default class List extends InteractiveLightningElement {
     this.loadData();
   }
   onLoadMore() {
-    const hasNext =
-      this.recordIds.split(",").length > this.pageIndex * this.pageSize;
+    const hasNext = this.recordIds.length > this.pageIndex * this.pageSize;
     if (hasNext) {
       this.pageIndex++;
       this.loadData();
@@ -99,28 +101,34 @@ export default class List extends InteractiveLightningElement {
    *  Lifecycle Event Handlers
    */
   connectedCallback() {
+    this.messageService = new MessageService(this, this.targetComponentIds);
+    this.messageService.subscribeStatusChangedToCompleted(
+      this.onStatusChangedToCompleted.bind(this)
+    );
+
     // Init properties
     this.sortedBy = this.sortBy;
     this.sortedDirection = this.sortDirection;
-
-    // Enable interactions
-    this.enableInteraction(this.componentId);
-    this.subscribeRecordMessage(this.sourceComponentIds, ({ recordIds }) => {
-      this.recordIds = recordIds;
-      this.pageIndex = 0;
-      this.loadData();
-    });
   }
   disconnectedCallback() {
-    this.unsubscribeRecordMessage();
+    this.messageService.unsubscribeAll();
   }
   renderedCallback() {
     if (!this.isRendered) {
       this.isRendered = true;
-      this.publishInitMessage();
+      this.messageService.publishStatusChangedToReady();
     }
   }
 
+  onStatusChangedToCompleted({ data, errors }) {
+    if (errors) {
+      throwRuntimeError(errors);
+      return;
+    }
+    this.recordIds = data;
+    this.pageIndex = 0;
+    this.loadData();
+  }
   /*
    *  Helper Functions
    */
@@ -129,7 +137,7 @@ export default class List extends InteractiveLightningElement {
     const params = {
       objectApiName: this.objectApiName,
       fieldApiNames: this.fieldApiNames,
-      recordIds: this.recordIds,
+      recordIds: this.recordIds.join(","),
       sortedBy: this.sortedBy,
       sortedDirection: this.sortedDirection,
       pageSize: this.pageSize,

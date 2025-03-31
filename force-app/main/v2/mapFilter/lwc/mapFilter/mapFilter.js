@@ -1,5 +1,4 @@
-import { api } from "lwc";
-import InteractiveLightningElement from "c/interactiveLightningElement";
+import { LightningElement, api } from "lwc";
 import { ConfigErrorEvent, RuntimeErrorEvent } from "c/errorEvent";
 
 import {
@@ -9,13 +8,15 @@ import {
 } from "c/metadataService";
 import { fetchRecordById, queryRecordsByLocation } from "c/recordService";
 
+import MessageService from "c/messageService";
+
 const DEFAULT_ZOOM_LEVEL = "12";
 const UNIT_OPTIONS = [
   { label: "km", value: "km", isSelected: true },
   { label: "mi", value: "mi" }
 ];
 
-export default class MapFilter extends InteractiveLightningElement {
+export default class MapFilter extends LightningElement {
   @api recordId;
   @api objectName;
   @api locationFieldApiName;
@@ -28,6 +29,7 @@ export default class MapFilter extends InteractiveLightningElement {
   @api defaultUnitOfDistance;
   @api componentId;
   @api sourceComponentIds;
+  @api targetComponentIds;
   @api isDebugMode;
 
   showSpinner;
@@ -35,6 +37,11 @@ export default class MapFilter extends InteractiveLightningElement {
   lightningMapAttributes;
 
   async connectedCallback() {
+    this.messageService = new MessageService(this, this.targetComponentIds);
+    this.messageService.subscribeStatusChangedToCompleted(
+      this.onStatusChangedToCompleted.bind(this)
+    );
+
     this.showSpinner = true;
     this.initLightningMapAttributes(this.zoomLevel);
 
@@ -53,32 +60,25 @@ export default class MapFilter extends InteractiveLightningElement {
         this.defaultUnitOfDistance,
         this.googleCloudApiKey
       );
-
-      // Subscribe to message channels
-      this.enableInteraction(this.componentId);
-      this.subscribeRecordMessage(
-        this.sourceComponentIds,
-        async ({ recordIds }) => {
-          if (this.isComponentReady) {
-            const records = await this.filterRecords(recordIds);
-            this.publishRecordMessage(
-              records.map((record) => record.Id).join(",")
-            );
-          }
-        }
-      );
-      this.subscribeTriggerMessage(async () => {
-        if (this.isComponentReady) {
-          const records = await this.queryRecords();
-          this.publishRecordMessage(
-            records.map((record) => record.Id).join(",")
-          );
-        }
-      });
     } catch (error) {
       this.dispatchEvent(new ConfigErrorEvent(error));
     } finally {
       this.showSpinner = false;
+    }
+  }
+
+  async onStatusChangedToCompleted({ data, errors }) {
+    if (errors) {
+      this.dispatchEvent(new RuntimeErrorEvent(errors));
+      return;
+    }
+    if (this.isComponentReady) {
+      const records = data
+        ? await this.filterRecords(data.join(","))
+        : await this.queryRecords();
+      this.messageService.publishStatusChangedToCompleted(
+        records.map((record) => record.Id)
+      );
     }
   }
 
@@ -115,7 +115,7 @@ export default class MapFilter extends InteractiveLightningElement {
 
       if (!this.isComponentReady) {
         this.isComponentReady = true;
-        this.publishInitMessage();
+        this.messageService.publishStatusChangedToReady();
       }
     } catch (error) {
       this.dispatchEvent(new RuntimeErrorEvent(error));
