@@ -83,8 +83,7 @@ export default class List extends LightningElement {
     this.loadData();
   }
   onLoadMore() {
-    const hasNext =
-      this.recordIds.split(",").length > this.pageIndex * this.pageSize;
+    const hasNext = this.recordIds.length > this.pageIndex * this.pageSize;
     if (hasNext) {
       this.pageIndex++;
       this.loadData();
@@ -103,12 +102,8 @@ export default class List extends LightningElement {
    */
   connectedCallback() {
     this.messageService = new MessageService(this, this.targetComponentIds);
-    this.messageService.subscribeStatusChangedToCompletedWithResult(
-      (payload) => {
-        this.recordIds = payload.result.recordIds;
-        this.pageIndex = 0;
-        this.loadData();
-      }
+    this.messageService.subscribeStatusChangedToCompleted(
+      this.onStatusChangedToCompleted.bind(this)
     );
 
     // Init properties
@@ -125,6 +120,15 @@ export default class List extends LightningElement {
     }
   }
 
+  onStatusChangedToCompleted({ data, errors }) {
+    if (errors) {
+      throwRuntimeError(errors);
+      return;
+    }
+    this.recordIds = data;
+    this.pageIndex = 0;
+    this.loadData();
+  }
   /*
    *  Helper Functions
    */
@@ -133,7 +137,7 @@ export default class List extends LightningElement {
     const params = {
       objectApiName: this.objectApiName,
       fieldApiNames: this.fieldApiNames,
-      recordIds: this.recordIds,
+      recordIds: this.recordIds.join(","),
       sortedBy: this.sortedBy,
       sortedDirection: this.sortedDirection,
       pageSize: this.pageSize,

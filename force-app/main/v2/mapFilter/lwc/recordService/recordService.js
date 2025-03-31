@@ -55,7 +55,7 @@ export async function queryRecordsByLocation(
         unit,
         recordIds
       });
-      console.log("queryString: ", queryString);
+      console.log(`queryString: ${queryString}`);
     } catch (error) {
       console.error("ERROR: getQueryStringForFindRecordsByLocation: ", error);
       throw error;

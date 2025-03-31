@@ -9,9 +9,7 @@ import EVENT_MESSAGE_CHANNEL from "@salesforce/messageChannel/EventMessage__c";
 export default class MessageService {
   static TYPES = {
     STATUS_CHANGED_TO_READY: "STATUS_CHANGED_TO_READY",
-    STATUS_CHANGED_TO_COMPLETED: "STATUS_CHANGED_TO_COMPLETED",
-    STATUS_CHANGED_TO_COMPLETED_WITH_RESULT:
-      "STATUS_CHANGED_TO_COMPLETED_WITH_RESULT"
+    STATUS_CHANGED_TO_COMPLETED: "STATUS_CHANGED_TO_COMPLETED"
   };
 
   // Constructor
@@ -47,13 +45,6 @@ export default class MessageService {
     );
   }
 
-  subscribeStatusChangedToCompletedWithResult(handler) {
-    this._createSubscription(
-      MessageService.TYPES.STATUS_CHANGED_TO_COMPLETED_WITH_RESULT,
-      handler
-    );
-  }
-
   _createSubscription(subscriptionKey, handler) {
     if (!this.subscriptions.has(subscriptionKey)) {
       const subscription = subscribe(
@@ -82,12 +73,6 @@ export default class MessageService {
     this._unsubscribe(MessageService.TYPES.STATUS_CHANGED_TO_COMPLETED);
   }
 
-  unsubscribeStatusChangedToCompletedWithResult() {
-    this._unsubscribe(
-      MessageService.TYPES.STATUS_CHANGED_TO_COMPLETED_WITH_RESULT
-    );
-  }
-
   unsubscribeAll() {
     this.subscriptions.forEach((subscription) => {
       unsubscribe(subscription);
@@ -111,15 +96,11 @@ export default class MessageService {
     });
   }
 
-  publishStatusChangedToCompleted() {
-    this._publishMessage(MessageService.TYPES.STATUS_CHANGED_TO_COMPLETED);
-  }
-
-  publishStatusChangedToCompletedWithResult(result) {
+  publishStatusChangedToCompleted(data, error) {
     this._publishMessage(
-      MessageService.TYPES.STATUS_CHANGED_TO_COMPLETED_WITH_RESULT,
+      MessageService.TYPES.STATUS_CHANGED_TO_COMPLETED,
       {},
-      { result }
+      { data, error }
     );
   }
 

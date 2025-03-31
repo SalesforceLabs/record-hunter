@@ -49,9 +49,7 @@ export default class Filter extends LightningElement {
     queryRecordIds(params)
       .then((result) => {
         if (result && !result.hasError) {
-          this.messageService.publishStatusChangedToCompletedWithResult({
-            recordIds: result.body.join(",")
-          });
+          this.messageService.publishStatusChangedToCompleted(result.body);
           this._showSpinner = false;
         } else if (result && result.hasError) {
           this._showSpinner = false;
@@ -105,40 +103,8 @@ export default class Filter extends LightningElement {
 
   connectedCallback() {
     this.messageService = new MessageService(this, this.targetComponentIds);
-    this.messageService.subscribeStatusChangedToCompleted(() => {
-      this.search();
-    });
-    this.messageService.subscribeStatusChangedToCompletedWithResult(
-      ({ result }) => {
-        const params = {
-          objectApiName: this._targetObjectName,
-          fieldApiNames: this._targetFieldNames,
-          formDataJson: JSON.stringify(this._formData),
-          recordIds: result.recordIds,
-          customLogic: this._customLogic
-        };
-
-        this._showSpinner = true;
-        (result.recordIds === null
-          ? queryRecordIds(params)
-          : filterRecordIds(params)
-        )
-          .then((response) => {
-            if (response && !response.hasError) {
-              this.messageService.publishStatusChangedToCompletedWithResult({
-                recordIds: response.body.join(",")
-              });
-              this._showSpinner = false;
-            } else if (response && response.hasError) {
-              this._showSpinner = false;
-              throwRuntimeError(response.errorMessage, response.errorCode);
-            }
-          })
-          .catch((error) => {
-            this._showSpinner = false;
-            throwRuntimeError(error);
-          });
-      }
+    this.messageService.subscribeStatusChangedToCompleted(
+      this.onStatusChangedToCompleted.bind(this)
     );
 
     this._targetObjectName = this.objectName;
@@ -166,6 +132,38 @@ export default class Filter extends LightningElement {
   }
   disconnectedCallback() {
     this.messageService.unsubscribeAll();
+  }
+
+  onStatusChangedToCompleted({ data, errors }) {
+    if (errors) {
+      console.error(errors);
+      throwRuntimeError(errors);
+      return;
+    }
+
+    const params = {
+      objectApiName: this._targetObjectName,
+      fieldApiNames: this._targetFieldNames,
+      formDataJson: JSON.stringify(this._formData),
+      recordIds: data?.join(","),
+      customLogic: this._customLogic
+    };
+
+    this._showSpinner = true;
+    (data ? filterRecordIds(params) : queryRecordIds(params))
+      .then((response) => {
+        if (response && !response.hasError) {
+          this.messageService.publishStatusChangedToCompleted(response.body);
+          this._showSpinner = false;
+        } else if (response && response.hasError) {
+          this._showSpinner = false;
+          throwRuntimeError(response.errorMessage, response.errorCode);
+        }
+      })
+      .catch((e) => {
+        this._showSpinner = false;
+        throwRuntimeError(e);
+      });
   }
 
   _buildInputs(fields, inputInfos, defaultValues) {

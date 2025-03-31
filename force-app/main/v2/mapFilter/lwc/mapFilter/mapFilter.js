@@ -38,23 +38,8 @@ export default class MapFilter extends LightningElement {
 
   async connectedCallback() {
     this.messageService = new MessageService(this, this.targetComponentIds);
-    this.messageService.subscribeStatusChangedToCompleted(async () => {
-      if (this.isComponentReady) {
-        const records = await this.queryRecords();
-        this.messageService.publishStatusChangedToCompletedWithResult({
-          recordIds: records.map((record) => record.Id).join(",")
-        });
-      }
-    });
-    this.messageService.subscribeStatusChangedToCompletedWithResult(
-      async ({ recordIds }) => {
-        if (this.isComponentReady) {
-          const records = await this.filterRecords(recordIds);
-          this.messageService.publishStatusChangedToCompletedWithResult({
-            recordIds: records.map((record) => record.Id).join(",")
-          });
-        }
-      }
+    this.messageService.subscribeStatusChangedToCompleted(
+      this.onStatusChangedToCompleted.bind(this)
     );
 
     this.showSpinner = true;
@@ -79,6 +64,21 @@ export default class MapFilter extends LightningElement {
       this.dispatchEvent(new ConfigErrorEvent(error));
     } finally {
       this.showSpinner = false;
+    }
+  }
+
+  async onStatusChangedToCompleted({ data, errors }) {
+    if (errors) {
+      this.dispatchEvent(new RuntimeErrorEvent(errors));
+      return;
+    }
+    if (this.isComponentReady) {
+      const records = data
+        ? await this.filterRecords(data.join(","))
+        : await this.queryRecords();
+      this.messageService.publishStatusChangedToCompleted(
+        records.map((record) => record.Id)
+      );
     }
   }
 

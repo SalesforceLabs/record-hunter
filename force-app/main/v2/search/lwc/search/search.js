@@ -47,18 +47,14 @@ export default class Search extends LightningElement {
       });
 
       if (data && !data.hasError) {
-        this.messageService.publishStatusChangedToCompletedWithResult({
-          recordIds: data.body.join(",")
-        });
+        this.messageService.publishStatusChangedToCompleted(data.body);
         this.showSpinner = false;
       } else if (data && data.hasError) {
         this.showSpinner = false;
         throwRuntimeError(data.errorMessage, data.errorCode);
       }
     } else {
-      this.messageService.publishStatusChangedToCompletedWithResult({
-        recordIds: null
-      });
+      this.messageService.publishStatusChangedToCompleted();
     }
   }
 
@@ -82,44 +78,8 @@ export default class Search extends LightningElement {
   // Lifecycle Event Handlers
   connectedCallback() {
     this.messageService = new MessageService(this, this.targetComponentIds);
-    this.messageService.subscribeStatusChangedToCompleted(() => {
-      this.search();
-    });
-    this.messageService.subscribeStatusChangedToCompletedWithResult(
-      ({ result }) => {
-        const keyword = this.template.querySelector("lightning-input").value;
-        if (keyword) {
-          const params = {
-            objectApiName: this.targetObjectApiName,
-            keyword,
-            recordIds: result.recordIds
-          };
-          this.showSpinner = true;
-          (result.recordIds === null
-            ? searchRecordIds(params)
-            : filterRecordIds(params)
-          )
-            .then((response) => {
-              if (response && !response.hasError) {
-                this.messageService.publishStatusChangedToCompletedWithResult({
-                  recordIds: response.body.join(",")
-                });
-                this.showSpinner = false;
-              } else if (response && response.hasError) {
-                this.showSpinner = false;
-                throwRuntimeError(response.errorMessage, response.errorCode);
-              }
-            })
-            .catch((error) => {
-              this.showSpinner = false;
-              throwRuntimeError(error);
-            });
-        } else {
-          this.messageService.publishStatusChangedToCompletedWithResult({
-            recordIds: null
-          });
-        }
-      }
+    this.messageService.subscribeStatusChangedToCompleted(
+      this.onStatusChangedToCompleted.bind(this)
     );
   }
   disconnectedCallback() {
@@ -130,6 +90,38 @@ export default class Search extends LightningElement {
       this.isRendered = true;
       this._isInputUpdated = false;
       this.messageService.publishStatusChangedToReady();
+    }
+  }
+
+  onStatusChangedToCompleted({ data, errors }) {
+    if (errors) {
+      throwRuntimeError(errors);
+      return;
+    }
+    const keyword = this.template.querySelector("lightning-input").value;
+    if (keyword) {
+      const params = {
+        objectApiName: this.targetObjectApiName,
+        keyword,
+        recordIds: data
+      };
+      this.showSpinner = true;
+      (data ? filterRecordIds(params) : searchRecordIds(params))
+        .then((response) => {
+          if (response && !response.hasError) {
+            this.messageService.publishStatusChangedToCompleted(response.body);
+            this.showSpinner = false;
+          } else if (response && response.hasError) {
+            this.showSpinner = false;
+            throwRuntimeError(response.errorMessage, response.errorCode);
+          }
+        })
+        .catch((e) => {
+          this.showSpinner = false;
+          throwRuntimeError(e);
+        });
+    } else {
+      this.messageService.publishStatusChangedToCompleted();
     }
   }
 }
