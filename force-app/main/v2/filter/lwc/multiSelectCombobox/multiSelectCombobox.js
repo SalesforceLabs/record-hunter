@@ -50,7 +50,7 @@ export default class MultiSelectCombobox extends LightningElement {
   }
 
   onSelectedOptionsChanged(e) {
-    this.draftValues = e.detail.value;
+    this.draftValues = e.detail.value || [];
     this.value = this.draftValues.join(";");
   }
 
@@ -71,7 +71,7 @@ export default class MultiSelectCombobox extends LightningElement {
   onDoneClicked(e) {
     e.stopPropagation();
     // eslint-disable-next-line @lwc/lwc/no-api-reassignments
-    this.values = this.draftValues;
+    this.values = this.draftValues || [];
     this.showDialog = false;
   }
 }
