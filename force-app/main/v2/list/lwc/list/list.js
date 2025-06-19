@@ -155,13 +155,11 @@ export default class List extends LightningElement {
         } else if (data && data.hasError) {
           throwRuntimeError(data.errorMessage, data.errorCode);
         }
-
         this.dispatchEvent(
           new CustomEvent("load", {
             detail: {
               numberOfRecords: this.data.length,
-              totalNumberOfRecords:
-                this.recordIds.length > 0 ? this.recordIds.split(",").length : 0
+              totalNumberOfRecords: this.recordIds ? this.recordIds.length : 0
             }
           })
         );
