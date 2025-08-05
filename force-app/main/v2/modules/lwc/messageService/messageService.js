@@ -2,7 +2,8 @@ import {
   subscribe,
   unsubscribe,
   publish,
-  createMessageContext
+  createMessageContext,
+  releaseMessageContext
 } from "lightning/messageService";
 import EVENT_MESSAGE_CHANNEL from "@salesforce/messageChannel/EventMessage__c";
 
@@ -15,6 +16,7 @@ export default class MessageService {
   // Constructor
 
   constructor(component, destinations) {
+    this.scope = window.location.pathname;
     this.component = component;
     this.channel = EVENT_MESSAGE_CHANNEL;
     this.messageContext = createMessageContext();
@@ -50,7 +52,8 @@ export default class MessageService {
       const subscription = subscribe(
         this.messageContext,
         this.channel,
-        ({ type, origin, destinations, payload }) => {
+        ({ type, origin, destinations, payload, scope }) => {
+          if (scope !== this.scope) return;
           const self = this.component.componentId;
           if (origin === self) return;
           if (!destinations.includes(self) && !destinations.includes("*"))
@@ -78,6 +81,7 @@ export default class MessageService {
       unsubscribe(subscription);
     });
     this.subscriptions.clear();
+    releaseMessageContext(this.messageContext);
   }
 
   _unsubscribe(subscriptionKey) {
@@ -110,7 +114,8 @@ export default class MessageService {
       origin: this.origin,
       destinations: options.to || this.destinations,
       timestamp: Date.now(),
-      payload: payload
+      payload: payload,
+      scope: this.scope
     });
   }
 }

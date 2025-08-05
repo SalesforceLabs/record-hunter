@@ -17,4 +17,7 @@
     <lightningMessageFields>
         <fieldName>payload</fieldName>
     </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>scope</fieldName>
+    </lightningMessageFields>
 </LightningMessageChannel>
