@@ -158,19 +158,23 @@ public with sharing class Describer {
         reducedFieldPath,
         relationshipNames
       );
-    } else if (
-      dfr.getType() == Schema.DisplayType.DATE ||
-      dfr.getType() == Schema.DisplayType.DATETIME
-    ) {
-      FieldInfo field = new FieldInfo(dsor, dfr, fieldApiName);
-      if (preferedObjectApiName == 'relative') {
+    } else {
+      relationshipNames.add(dfr.getName());
+      FieldInfo field = new FieldInfo(
+        dsor,
+        dfr,
+        String.join(relationshipNames, '.')
+      );
+
+      if (
+        (dfr.getType() == Schema.DisplayType.DATE ||
+        dfr.getType() == Schema.DisplayType.DATETIME) &&
+        preferedObjectApiName == 'relative'
+      ) {
         field.fieldPath = field.fieldPath?.split(':')[0];
         field.isRelative = true;
       }
       return field;
-    } else {
-      relationshipNames.add(dfr.getName());
-      return new FieldInfo(dsor, dfr, String.join(relationshipNames, '.'));
     }
   }
 
