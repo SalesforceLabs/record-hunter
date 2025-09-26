@@ -128,9 +128,6 @@ public with sharing class FilterDataService extends DataService {
     if (String.isNotBlank(conditions)) {
       query += ' WHERE ' + conditions;
     }
-
-    System.debug(query);
-
     List<Id> recordIds = performQuery(query);
 
     return new Result(recordIds);
