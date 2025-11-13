@@ -1,4 +1,4 @@
-<design:component label="Search Box">
+<design:component label="Search Box (Deprecated)">
     <design:attribute name="title"                     label="Title"                         required="false" default="Search"                                description="Title displayed on the component header. A number of records displayed follows."/>
     <design:attribute name="objectName"                label="Target Object"                 required="true"  default="Opportunity"                           description="API name for a target object. Add '__c' for a custom object. i.e. Account, Opportunity, CustomObject__c, etc"/>
     <design:attribute name="fieldNames"                label="Field Names"                   required="false" default="Name, StageName, Amount, CloseDate, AccountId.Name, OwnerId:User.Name" description="API names for fields on Target Object. Use ',' for multiple fields. Add '__c' for a custom fields. Use '.' to access its parent object's fields. Use ':' if polymorphic fields. i.e. Name, Amount, CloseDate, AccountId.Name, OwnerId:User.Name"/>

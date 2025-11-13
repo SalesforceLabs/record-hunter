@@ -9,3 +9,4 @@
 .vscode
 
 coverage/
+force-app/deprecated/**

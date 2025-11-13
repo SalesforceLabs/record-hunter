@@ -1,4 +1,4 @@
-<design:component label="Location Filter">
+<design:component label="Location Filter (Deprecated)">
     <design:attribute name="title"                      label="Title"                         required="false" default="Filter by Locations"   description="Title displayed on the component header. A number of records displayed follows."/>
     <design:attribute name="objectName"                 label="Target Object"                 required="true"  default="Opportunity" description="API name for a target object. Add '__c' for a custom object. "/>
     <design:attribute name="geolocationFieldName"       label="Geolocation Field Name"        required="true"                        description="API field name for a Geolocation."/>
